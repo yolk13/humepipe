@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contech - Quality Assurance</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#653e00",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "surface-variant": "#e2e2e2",
+                        "on-primary-fixed-variant": "#003baf",
+                        "secondary-fixed": "#ffddb8",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-background": "#1a1c1c",
+                        "inverse-primary": "#b6c4ff",
+                        "tertiary": "#4f5a6e",
+                        "surface-dim": "#dadada",
+                        "on-primary-fixed": "#00164e",
+                        "surface-container-low": "#f3f3f4",
+                        "tertiary-container": "#677287",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8e8",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "surface-tint": "#2854cc",
+                        "primary": "#214fc7",
+                        "on-surface": "#1a1c1c",
+                        "tertiary-fixed": "#d8e3fb",
+                        "on-tertiary-container": "#f6f7ff",
+                        "primary-container": "#4169e1",
+                        "on-primary-container": "#f8f7ff",
+                        "inverse-on-surface": "#f0f1f1",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747685",
+                        "on-error": "#ffffff",
+                        "secondary": "#855300",
+                        "surface-bright": "#f9f9f9",
+                        "inverse-surface": "#2f3131",
+                        "primary-fixed": "#dce1ff",
+                        "surface": "#f9f9f9",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fea619",
+                        "on-tertiary-fixed": "#111c2d",
+                        "surface-container-highest": "#e2e2e2",
+                        "outline-variant": "#c4c5d6",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#434654",
+                        "on-secondary-container": "#684000",
+                        "surface-container": "#eeeeee",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "background": "#f9f9f9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "26px",
+                        "xs": "10px",
+                        "xxl": "110px",
+                        "container_max": "1280px",
+                        "lg": "42px",
+                        "sm": "16px",
+                        "xl": "68px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-xl": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "headline-xl-mobile": ["Inter", "sans-serif"],
+                        "display-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "label-md": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["68px", { "lineHeight": "76px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-lg": ["42px", { "lineHeight": "52px", "fontWeight": "600" }],
+                        "headline-md": ["26px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-xl-mobile": ["42px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "display-lg": ["110px", { "lineHeight": "120px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-lg antialiased pt-[110px]">
+<!-- TopNavBar Component -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-xl max-w-container_max mx-auto bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+            CONTECH
+        </div>
+<nav class="hidden md:flex items-center gap-md">
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 uppercase" href="#">Home</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 uppercase" href="#">Products</a>
+<a class="font-label-md text-label-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-bold uppercase uppercase" href="#">QA</a>
+</nav>
+<div class="flex items-center gap-sm">
+<button class="hidden md:flex font-label-md text-label-md bg-primary text-on-primary px-[26px] py-[16px] rounded-none hover:bg-primary-container hover:text-on-primary-container transition-colors uppercase tracking-widest border border-primary">
+                Request Quote
+            </button>
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main class="w-full">
+<!-- Page Header -->
+<section class="max-w-container_max mx-auto px-lg py-xl border-b border-outline-variant flex flex-col gap-sm">
+<h1 class="font-headline-xl text-headline-xl text-on-surface uppercase tracking-tight">Quality Assurance</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+                Rigorous testing protocols ensuring maximum structural integrity and adherence to stringent industrial standards.
+            </p>
+</section>
+<!-- Section 1: Three-Edge Bearing Test -->
+<section class="max-w-container_max mx-auto px-lg py-xxl border-b border-outline-variant">
+<div class="flex flex-col md:flex-row items-center justify-between gap-lg">
+<!-- Image Block (62/38 ratio approx mapping to 7/5 grid or direct flex basis) -->
+<div class="w-full md:w-7/12 relative group">
+<div class="absolute inset-0 border-2 border-primary translate-x-3 translate-y-3 -z-10 transition-transform group-hover:translate-x-4 group-hover:translate-y-4"></div>
+<img class="w-full h-[500px] object-cover border border-outline bg-surface-container-highest" data-alt="A highly detailed industrial photograph of a massive concrete hume pipe undergoing a three-edge bearing test in a modern, brightly lit testing facility. Heavy steel hydraulic machinery applies downward pressure on the pipe, monitored by digital gauges. The setting is a clean, modern industrial warehouse with light grey concrete floors and white walls. The lighting is high-key and technical, emphasizing the raw texture of the concrete and the precision of the steel testing rig. The overall mood is serious, engineered, and reliable." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjilf2O5muSJrDBHwnggGztG9nauySWFbug9ALt6RGn1rA10fpHTazKPDMukQ3UXf0tj9P6HFnygioe6PsGWU2K9GYdZIZRv9MU5Iz38L2PT-do3XSJz-ausxb3lT6QNkXfj80Ozw9GNPNMNIRKycTw6SKOAtD7-xNd0kIayP0QRfT2whnJ-xagfSi5zjODDFsSWrELCXUdBEbdeG_4FkBdfsUOwYlj1G67vWdctRgC_GU_O8kq7G2"/>
+</div>
+<!-- Text Block -->
+<div class="w-full md:w-5/12 flex flex-col gap-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Three-Edge Bearing Test</h2>
+<div class="h-[2px] w-[68px] bg-secondary-container"></div>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-justify">
+                        To guarantee the structural resilience of our RCC pipes under heavy earth and traffic loads, each batch is subjected to the rigorous Three-Edge Bearing Test in strict compliance with IS 458 codes. This protocol simulates extreme subterranean stress conditions by applying concentrated radial loads across the longitudinal axis of the pipe. The structural integrity is continuously monitored via electronic load cells, ensuring that the ultimate load-bearing capacity significantly exceeds standard environmental stress factors before micro-fractures appear. This zero-tolerance approach to compressive strength verification ensures permanent subterranean stability.
+                    </p>
+<div class="flex gap-sm items-center mt-sm">
+<span class="material-symbols-outlined text-secondary-container" data-weight="fill">verified</span>
+<span class="font-label-md text-label-md text-on-surface uppercase text-secondary">IS 458 Compliant</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Hydrostatic Pressure Test -->
+<section class="max-w-container_max mx-auto px-lg py-xxl">
+<!-- Alternating layout using row-reverse on desktop -->
+<div class="flex flex-col md:flex-row-reverse items-center justify-between gap-lg">
+<!-- Image Block -->
+<div class="w-full md:w-7/12 relative group">
+<div class="absolute inset-0 border-2 border-tertiary-container -translate-x-3 translate-y-3 -z-10 transition-transform group-hover:-translate-x-4 group-hover:translate-y-4"></div>
+<img class="w-full h-[500px] object-cover border border-outline bg-surface-container-highest" data-alt="A high-resolution, technical image of a concrete pipe undergoing a hydrostatic pressure test in a state-of-the-art laboratory. The pipe is sealed at both ends with heavy-duty steel bulkheads and clamped securely. High-pressure water lines and digital pressure gauges are visible, recording internal PSI metrics. The environment is a clean, bright, white-walled industrial lab with precise lighting highlighting water droplets on the concrete surface. The aesthetic conveys clinical precision, modern engineering, and absolute reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf2MO5h1r5E6lrDDzlK5anzWXxjJR7DhXzvQNtdxNX1JuB58PKzwngqaKpmFG8gdoZP9JhN9Qos0o2fRyvcC_zMcRwpyhLjIuOWsAShtT5EZZ7yL6pIlURSRGanpn7GB8ButuYczDA_ZwRhBenD10gYTuTE8L4K9yTbnDh6uRHZOvu42RZReR1GP4gq9B5mUi1AFkwMkMFmk7f-nPjpJOk_XKYIL72w7-xPoZIdJrpmeIe6KKn0Uhv"/>
+</div>
+<!-- Text Block -->
+<div class="w-full md:w-5/12 flex flex-col gap-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Hydrostatic Pressure Test</h2>
+<div class="h-[2px] w-[68px] bg-primary-container"></div>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-justify">
+                        Ensuring absolute impermeability is critical for sanitary and storm sewer infrastructure. The Hydrostatic Pressure Test systematically verifies the porosity and water-tightness of our concrete matrix. By sealing the pipe ends with mechanical bulkheads and subjecting the internal chamber to sustained, elevated hydraulic pressure, we meticulously inspect for any signs of seepage, sweating, or pressure drops over a specified duration. This intensive internal pressurization mimics maximum flow scenarios, validating the density of the compacted concrete and confirming that the structural matrix remains uncompromisingly watertight over decades of subterranean service.
+                    </p>
+<div class="flex gap-sm items-center mt-sm">
+<span class="material-symbols-outlined text-primary-container" data-weight="fill">water_drop</span>
+<span class="font-label-md text-label-md text-on-surface uppercase text-primary">Zero Seepage Verification</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="w-full py-xl px-lg grid grid-cols-12 gap-md max-w-container_max mx-auto bg-inverse-surface dark:bg-surface-container-lowest border-t border-outline relative">
+<div class="col-span-12 md:col-span-4 flex flex-col gap-sm">
+<div class="font-headline-md text-headline-md font-bold text-inverse-on-surface dark:text-on-surface">
+                CONTECH
+            </div>
+<p class="font-body-lg text-body-lg text-surface-variant dark:text-on-surface-variant mt-xs">
+                © 2024 Contech Concrete and Allied Industries. All Rights Reserved. ISO 9001:2015 Certified.
+            </p>
+</div>
+<div class="col-span-12 md:col-span-8 flex flex-wrap gap-xl justify-start md:justify-end">
+<div class="flex flex-col gap-xs">
+<a class="font-label-md text-label-md text-surface-variant dark:text-on-surface-variant hover:text-secondary-fixed-dim dark:hover:text-secondary transition-colors duration-200 uppercase" href="#">Contact Info</a>
+<a class="font-label-md text-label-md text-surface-variant dark:text-on-surface-variant hover:text-secondary-fixed-dim dark:hover:text-secondary transition-colors duration-200 uppercase" href="#">Factory Location</a>
+<a class="font-label-md text-label-md text-surface-variant dark:text-on-surface-variant hover:text-secondary-fixed-dim dark:hover:text-secondary transition-colors duration-200 uppercase" href="#">Quick Links</a>
+<a class="font-label-md text-label-md text-surface-variant dark:text-on-surface-variant hover:text-secondary-fixed-dim dark:hover:text-secondary transition-colors duration-200 uppercase" href="#">ISO Certification</a>
+</div>
+</div>
+</footer>
+</body></html>

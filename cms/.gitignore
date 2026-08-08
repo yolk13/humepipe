@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# payload
+media/
+src/payload-types.ts
+.prebuild/
+
+# database
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# env
+.env
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+dist/
+build/
+.turbo/
+
+# Payload
+cms/.payload/
+cms/src/payload/generated-types.ts
+media/
+cms/.env
+
+# Local databases
+*.db
+*.db-journal
+cms/contech.db
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  /* ------------------------------------------------------------------
+   * Golden-ratio spacing (φ = 1.618)
+   * 10 → 16 → 26 → 42 → 68 → 110  (each step ≈ ×1.618)
+   * Every margin/padding must come from this scale.
+   * ------------------------------------------------------------------ */
+  --spacing-xs: 10px;
+  --spacing-sm: 16px;
+  --spacing-md: 26px;
+  --spacing-lg: 42px;
+  --spacing-xl: 68px;
+  --spacing-xxl: 110px;
+
+  /* ------------------------------------------------------------------
+   * Color system — 60-30-10
+   * 60% surfaces (white/slate), 30% royal blue, 10% amber (CTAs only)
+   * ------------------------------------------------------------------ */
+  --color-background: #f9f9f9;
+  --color-surface: #f9f9f9;
+  --color-surface-lowest: #ffffff;
+  --color-surface-low: #f3f3f4;
+  --color-surface-mid: #eeeeee;
+  --color-surface-high: #e8e8e8;
+  --color-surface-highest: #e2e2e2;
+
+  --color-ink: #1a1c1c; /* on-surface */
+  --color-ink-muted: #434654; /* on-surface-variant */
+  --color-slate: #475569; /* slate gray — metadata */
+  --color-slate-deep: #1e293b; /* heavy blueprint ink */
+
+  --color-royal: #4169e1; /* royal blue — brand authority */
+  --color-royal-deep: #2c4fbd; /* hover/active variant */
+  --color-royal-faint: #b6c4ff; /* primary-fixed-dim */
+
+  --color-amber: #f59e0b; /* safety orange — CTA only */
+  --color-amber-ink: #1e293b; /* deep slate text on amber */
+
+  --color-border: #e2e8f0; /* card borders */
+  --color-outline: #747685;
+  --color-outline-variant: #c4c5d6;
+  --color-inverse-surface: #2f3131;
+  --color-error: #ba1a1a;
+
+  /* ------------------------------------------------------------------
+   * Typography — Inter, golden-ratio scale
+   * body 16 → headline-md 26 → headline-lg 42 → headline-xl 68 → display 110
+   * ------------------------------------------------------------------ */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--font-weight: 400;
+
+  --text-label-md: 10px;
+  --text-label-md--line-height: 12px;
+  --text-label-md--letter-spacing: 0.05em;
+  --text-label-md--font-weight: 600;
+
+  --text-headline-md: 26px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-lg: 42px;
+  --text-headline-lg--line-height: 52px;
+  --text-headline-lg--font-weight: 600;
+
+  --text-headline-xl: 68px;
+  --text-headline-xl--line-height: 76px;
+  --text-headline-xl--font-weight: 700;
+  --text-headline-xl--letter-spacing: -0.01em;
+
+  --text-headline-xl-mobile: 42px;
+  --text-headline-xl-mobile--line-height: 48px;
+  --text-headline-xl-mobile--font-weight: 700;
+
+  --text-display-lg: 110px;
+  --text-display-lg--line-height: 120px;
+  --text-display-lg--font-weight: 700;
+  --text-display-lg--letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------------
+ * Motion — Fibonacci durations (150 / 250 / 400 / 650 ms)
+ * ------------------------------------------------------------------ */
+:root {
+  --duration-150: 150ms;
+  --duration-250: 250ms;
+  --duration-400: 400ms;
+  --duration-650: 650ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ------------------------------------------------------------------
+ * Layout — 1280px container (golden-ratio constrained)
+ * ------------------------------------------------------------------ */
+@utility container-max {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+body {
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* ------------------------------------------------------------------
+ * Marquee (trust bar) — CSS-driven, pauses on hover
+ * ------------------------------------------------------------------ */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee 36s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
