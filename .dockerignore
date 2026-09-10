@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log*
+.env
+db/contech.db*
+public/uploads
+test
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+README.md
+execution_log.md

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#4169E1">
+    <title><%= meta ? (meta.title || 'Contech Concrete') : 'Contech Concrete' %></title>
+    <% if (meta && meta.description) { %>
+        <meta name="description" content="<%= meta.description %>">
+    <% } %>
+    <meta property="og:type" content="<%= meta && meta.type ? meta.type : 'website' %>">
+    <meta property="og:title" content="<%= meta ? (meta.title || 'Contech Concrete') : 'Contech Concrete' %>">
+    <% if (meta && meta.description) { %>
+        <meta property="og:description" content="<%= meta.description %>">
+    <% } %>
+    <meta property="og:site_name" content="Contech Concrete">
+    <meta property="og:image" content="/hero.svg">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/tailwind-config.js"></script>
+    <% if (typeof jsonld !== 'undefined' && jsonld) { %>
+        <script type="application/ld+json"><%= JSON.stringify(jsonld) %></script>
+    <% } %>
+</head>
+<body class="bg-neutral text-ink font-sans">
+    <header class="bg-primary text-white sticky top-0 z-50 border-b-2 border-ink">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center gap-4">
+            <div>
+                <a href="/" class="text-2xl font-bold flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                    <span class="text-accent text-3xl mr-2">C</span> Contech Concrete
+                </a>
+            </div>
+            <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold" aria-label="Primary">
+                <a href="/" class="hover:text-[#c7d3ff] <%= currentPath === '/' ? 'text-accent' : '' %>">Home</a>
+                <a href="/about" class="hover:text-[#c7d3ff] <%= currentPath === '/about' ? 'text-accent' : '' %>">About Us</a>
+                <a href="/products" class="hover:text-[#c7d3ff] <%= currentPath === '/products' ? 'text-accent' : '' %>">Products</a>
+                <a href="/quality" class="hover:text-[#c7d3ff] <%= currentPath === '/quality' ? 'text-accent' : '' %>">Quality</a>
+                <a href="/technology" class="hover:text-[#c7d3ff] <%= currentPath === '/technology' ? 'text-accent' : '' %>">Technology</a>
+                <a href="/blogs" class="hover:text-[#c7d3ff] <%= currentPath.startsWith('/blogs') ? 'text-accent' : '' %>">Blogs</a>
+            </nav>
+            <div class="hidden md:block">
+                <a href="/contact" class="bg-accent hover:bg-amber-400 text-ink px-6 py-2.5 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Request Quote</a>
+            </div>
+            <button id="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav"
+                class="md:hidden text-white text-3xl leading-none px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Toggle menu">&#8801;</button>
+        </div>
+        <div id="mobile-nav" class="hidden md:hidden bg-primary border-t border-slate-600">
+            <nav class="px-4 py-2 space-y-1 text-sm font-semibold" aria-label="Mobile">
+                <a href="/" class="block py-2.5 hover:bg-primaryDark <%= currentPath === '/' ? 'text-accent' : '' %>">Home</a>
+                <a href="/about" class="block py-2.5 hover:bg-primaryDark <%= currentPath === '/about' ? 'text-accent' : '' %>">About Us</a>
+                <a href="/products" class="block py-2.5 hover:bg-primaryDark <%= currentPath === '/products' ? 'text-accent' : '' %>">Products</a>
+                <a href="/quality" class="block py-2.5 hover:bg-primaryDark <%= currentPath === '/quality' ? 'text-accent' : '' %>">Quality</a>
+                <a href="/technology" class="block py-2.5 hover:bg-primaryDark <%= currentPath === '/technology' ? 'text-accent' : '' %>">Technology</a>
+                <a href="/blogs" class="block py-2.5 hover:bg-primaryDark <%= currentPath.startsWith('/blogs') ? 'text-accent' : '' %>">Blogs</a>
+                <a href="/contact" class="block py-2.5 mt-1 bg-accent text-ink font-bold text-center">Request Quote</a>
+            </nav>
+        </div>
+    </header>
+    <main class="min-h-screen">

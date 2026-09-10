@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-label="RCC concrete pipe cross-section and stacked pipes">
+  <rect width="1200" height="620" fill="#F9F9F9"/>
+  <g stroke="#E2E8F0" stroke-width="1">
+    <line x1="0" y1="124" x2="1200" y2="124"/>
+    <line x1="0" y1="248" x2="1200" y2="248"/>
+    <line x1="0" y1="372" x2="1200" y2="372"/>
+    <line x1="0" y1="496" x2="1200" y2="496"/>
+    <line x1="150" y1="0" x2="150" y2="620"/>
+    <line x1="300" y1="0" x2="300" y2="620"/>
+    <line x1="450" y1="0" x2="450" y2="620"/>
+    <line x1="600" y1="0" x2="600" y2="620"/>
+    <line x1="750" y1="0" x2="750" y2="620"/>
+    <line x1="900" y1="0" x2="900" y2="620"/>
+    <line x1="1050" y1="0" x2="1050" y2="620"/>
+  </g>
+
+  <g transform="translate(360,20)">
+    <circle cx="260" cy="290" r="220" fill="none" stroke="#1E293B" stroke-width="56"/>
+    <circle cx="260" cy="290" r="152" fill="none" stroke="#4169E1" stroke-width="10"/>
+    <line x1="260" y1="290" x2="480" y2="290" stroke="#475569" stroke-width="4"/>
+    <line x1="260" y1="290" x2="260" y2="70" stroke="#475569" stroke-width="4"/>
+    <circle cx="480" cy="290" r="10" fill="#F59E0B"/>
+    <circle cx="260" cy="70" r="10" fill="#F59E0B"/>
+    <text x="456" y="318" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#1E293B">600&ndash;2000 mm</text>
+    <text x="116" y="52" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#1E293B">IS 458:2003</text>
+    <rect x="140" y="416" width="240" height="46" fill="#F59E0B"/>
+    <text x="260" y="448" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#1E293B" text-anchor="middle">VERTICAL VIBRO</text>
+  </g>
+
+  <g transform="translate(760,0)">
+    <rect x="0" y="120" width="340" height="150" rx="40" fill="#4169E1"/>
+    <rect x="20" y="140" width="300" height="110" rx="34" fill="#4169E1"/>
+    <rect x="120" y="90" width="100" height="210" rx="20" fill="#4169E1"/>
+    <rect x="0" y="300" width="340" height="150" rx="40" fill="#3457C9"/>
+    <rect x="20" y="320" width="300" height="110" rx="34" fill="#3457C9"/>
+    <rect x="120" y="270" width="100" height="210" rx="20" fill="#3457C9"/>
+    <rect x="60" y="480" width="220" height="44" rx="22" fill="#F59E0B"/>
+    <line x1="40" y1="560" x2="300" y2="560" stroke="#475569" stroke-width="4" stroke-dasharray="14 12"/>
+    <circle cx="40" cy="560" r="9" fill="#F59E0B"/>
+    <circle cx="300" cy="560" r="9" fill="#F59E0B"/>
+    <text x="170" y="590" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" fill="#1E293B" text-anchor="middle">2.5 m EFFECTIVE LENGTH</text>
+  </g>
+</svg>

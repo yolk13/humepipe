@@ -1,0 +1,117 @@
+<div id="enquiry-form" class="bg-white border border-line p-[26px] md:p-[42px]">
+    <h3 class="text-[26px] font-bold text-ink mb-6">Request a Quotation</h3>
+    <p class="text-slate mb-[26px] text-sm leading-7">Fill in your details and pipe specifications. Our team will respond within one business day.</p>
+
+    <form id="enquire" novalidate>
+        <div id="step-indicator" class="flex mb-[26px]" role="tablist" aria-label="Quote form steps">
+            <div class="flex-1 text-center text-sm font-bold text-primary border-b-2 border-primary pb-2" data-step="1">1. Contact Info</div>
+            <div class="flex-1 text-center text-sm font-bold text-slate border-b-2 border-line pb-2" data-step="2">2. Pipe Specs</div>
+            <div class="flex-1 text-center text-sm font-bold text-slate border-b-2 border-line pb-2" data-step="3">3. Notes &amp; Confirm</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step" data-step="1">
+            <div class="space-y-[26px]">
+                <div>
+                    <label for="client_name" class="block text-sm font-bold mb-2">Full Name *</label>
+                    <input type="text" id="client_name" name="client_name"
+                        class="w-full border-b-2 border-slate focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                        placeholder="Your name">
+                </div>
+                <div>
+                    <label for="company_name" class="block text-sm font-bold mb-2">Company</label>
+                    <input type="text" id="company_name" name="company_name"
+                        class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                        placeholder="Company name (optional)">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-[26px]">
+                    <div>
+                        <label for="email" class="block text-sm font-bold mb-2">Email *</label>
+                        <input type="email" id="email" name="email"
+                            class="w-full border-b-2 border-slate focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                            placeholder="you@company.com">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-bold mb-2">Phone *</label>
+                        <input type="tel" id="phone" name="phone"
+                            class="w-full border-b-2 border-slate focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                            placeholder="+977 ...">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-[26px]">
+                <button type="button" class="next-step bg-primary hover:bg-primaryDark text-white px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Next</button>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step hidden" data-step="2">
+            <div class="space-y-[26px]">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-[26px]">
+                    <div>
+                        <label for="pipe_type" class="block text-sm font-bold mb-2">Pipe Type</label>
+                        <select id="pipe_type" name="pipe_type"
+                            class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent">
+                            <option value="">Select pipe type</option>
+                            <option value="NP3">NP3</option>
+                            <option value="NP4">NP4</option>
+                            <option value="Both">Both / Not sure</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pipe_diameter" class="block text-sm font-bold mb-2">Internal Diameter (mm)</label>
+                        <select id="pipe_diameter" name="pipe_diameter"
+                            class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent">
+                            <option value="">Select diameter</option>
+                            <% [600, 700, 800, 900, 1000, 1100, 1200, 1400, 1600, 1800, 2000].forEach(d => { %>
+                                <option value="<%= d %>"><%= d %> mm</option>
+                            <% }) %>
+                            <option value="Multiple">Multiple sizes / Not sure</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="quantity" class="block text-sm font-bold mb-2">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" min="1"
+                        class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                        placeholder="Number of pipes">
+                </div>
+                <div>
+                    <label for="delivery_site" class="block text-sm font-bold mb-2">Delivery Site *</label>
+                    <input type="text" id="delivery_site" name="delivery_site"
+                        class="w-full border-b-2 border-slate focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                        placeholder="District, municipality, site name...">
+                    <p class="text-sm text-slate mt-2">Size range: 600 mm to 2000 mm internal diameter per IS 458:2003. We deliver across Nepal and export internationally.</p>
+                </div>
+            </div>
+            <div class="flex justify-between mt-[26px]">
+                <button type="button" class="prev-step bg-line hover:bg-slate-200 text-ink px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Back</button>
+                <button type="button" class="next-step bg-primary hover:bg-primaryDark text-white px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Next</button>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step hidden" data-step="3">
+            <div>
+                <label for="message" class="block text-sm font-bold mb-2">Additional Notes</label>
+                <textarea id="message" name="message" rows="5"
+                    class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                    placeholder="Timeline, site access, special requirements..."></textarea>
+            </div>
+            <div class="flex justify-between mt-[26px]">
+                <button type="button" class="prev-step bg-line hover:bg-slate-200 text-ink px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Back</button>
+                <button type="submit" class="bg-accent hover:bg-amber-400 text-ink px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Submit Enquiry</button>
+            </div>
+        </div>
+
+        <div id="form-status" class="hidden mt-[26px] p-4 text-sm font-bold" role="status" aria-live="polite"></div>
+
+        <div id="form-success" class="hidden mt-[26px] border-2 border-primary p-[42px] text-center">
+            <p class="text-4xl font-bold text-primary mb-4">Thank you</p>
+            <p class="text-lg text-slate mb-6">Your quotation request has been received. Our team will get back to you within one business day.</p>
+            <button type="button" id="send-another" class="bg-primary hover:bg-primaryDark text-white px-8 py-3 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Send another enquiry</button>
+        </div>
+    </form>
+</div>
+
+<script src="/enquiry-form.js"></script>

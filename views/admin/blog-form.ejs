@@ -1,0 +1,55 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="text-[42px] font-bold text-ink mb-8"><%= blog ? 'Edit Blog' : 'New Blog' %></h1>
+
+<div class="max-w-3xl bg-white p-8 border border-line">
+    <form method="post" action="<%= blog ? '/admin/blogs/' + blog.id + '/edit' : '/admin/blogs/new' %>" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div>
+            <label for="title" class="block text-sm font-bold mb-2">Title *</label>
+            <input type="text" id="title" name="title" required value="<%= blog ? blog.title : '' %>"
+                class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent">
+        </div>
+        <div>
+            <label for="slug" class="block text-sm font-bold mb-2">Slug</label>
+            <input type="text" id="slug" name="slug" value="<%= blog ? blog.slug : '' %>"
+                class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                placeholder="Leave blank to auto-generate from title">
+        </div>
+        <div>
+            <label for="content" class="block text-sm font-bold mb-2">Content (HTML)</label>
+            <textarea id="content" name="content" rows="12"
+                class="w-full border border-line focus:border-primary focus-visible:border-primary outline-none p-3"><%= blog ? blog.content : '' %></textarea>
+        </div>
+        <div>
+            <label for="meta_title" class="block text-sm font-bold mb-2">SEO Title</label>
+            <input type="text" id="meta_title" name="meta_title" value="<%= blog ? blog.meta_title : '' %>"
+                class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent">
+        </div>
+        <div>
+            <label for="meta_description" class="block text-sm font-bold mb-2">Meta Description</label>
+            <textarea id="meta_description" name="meta_description" rows="2"
+                class="w-full border border-line focus:border-primary focus-visible:border-primary outline-none p-3"><%= blog ? blog.meta_description : '' %></textarea>
+        </div>
+        <div>
+            <label for="featured_image_file" class="block text-sm font-bold mb-2">Featured Image (upload)</label>
+            <input type="file" id="featured_image_file" name="featured_image_file" accept="image/jpeg,image/png,image/webp,image/gif"
+                class="w-full border border-line p-2" onchange="document.getElementById('img-preview').src = URL.createObjectURL(this.files[0])">
+            <div class="mt-3">
+                <img id="img-preview" src="<%= blog && blog.featured_image ? blog.featured_image : '' %>" alt="Featured image preview" class="h-32 w-auto object-cover border border-line <%= blog && blog.featured_image ? '' : 'hidden' %>">
+            </div>
+        </div>
+        <div>
+            <label for="featured_image" class="block text-sm font-bold mb-2">...or Featured Image URL</label>
+            <input type="text" id="featured_image" name="featured_image" value="<%= blog && blog.featured_image && !blog.featured_image.startsWith('/uploads/') ? blog.featured_image : '' %>"
+                class="w-full border-b-2 border-line focus:border-primary focus-visible:border-primary outline-none py-2 bg-transparent"
+                placeholder="https://... (optional)">
+        </div>
+        <div class="flex justify-end space-x-4">
+            <a href="/admin/blogs" class="bg-line hover:bg-slate-200 text-ink px-6 py-2 font-bold text-sm">Cancel</a>
+            <button type="submit" class="bg-primary hover:bg-primaryDark text-white px-6 py-2 font-bold text-sm">Save</button>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/admin-footer') %>

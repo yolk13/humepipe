@@ -1,0 +1,43 @@
+<%- include('../partials/admin-header') %>
+
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-[42px] font-bold text-ink">Blogs</h1>
+    <a href="/admin/blogs/new" class="bg-accent hover:bg-amber-400 text-ink px-6 py-2 font-bold text-sm">+ New Blog</a>
+</div>
+
+<% if (blogs.length === 0) { %>
+    <p class="text-slate">No blogs yet. Create your first post.</p>
+<% } else { %>
+    <div class="bg-white border border-line overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th class="px-6 py-3 text-left font-bold">Title</th>
+                    <th class="px-6 py-3 text-left font-bold">Slug</th>
+                    <th class="px-6 py-3 text-left font-bold">Published</th>
+                    <th class="px-6 py-3 text-right font-bold">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                <% blogs.forEach(blog => { %>
+                    <tr class="hover:bg-neutral">
+                        <td class="px-6 py-3 font-bold"><%= blog.title %></td>
+                        <td class="px-6 py-3 text-slate">/<%= blog.slug %></td>
+                        <td class="px-6 py-3 text-slate"><%= new Date(blog.published_at).toLocaleDateString() %></td>
+                        <td class="px-6 py-3 text-right space-x-3">
+                            <a href="/blogs/<%= blog.slug %>" target="_blank" class="text-primary font-bold hover:underline">View</a>
+                            <a href="/admin/blogs/<%= blog.id %>/edit" class="text-primary font-bold hover:underline">Edit</a>
+                            <form method="post" action="/admin/blogs/<%= blog.id %>/delete" class="inline"
+                                onsubmit="return confirm('Delete this blog?');">
+                                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                                <button class="text-red-600 font-bold hover:underline">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } %>
+
+<%- include('../partials/admin-footer') %>

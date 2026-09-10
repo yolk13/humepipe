@@ -1,0 +1,81 @@
+<%- include('partials/header') %>
+
+<div class="container mx-auto px-4 py-[68px] md:py-[110px]">
+    <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px] text-center">Technical Data</p>
+    <h1 class="text-[42px] md:text-[68px] font-bold text-ink mb-[26px] text-center">Product Specifications</h1>
+
+    <div class="max-w-4xl mx-auto mb-[68px]">
+        <p class="text-lg text-slate text-center mb-[42px]">We manufacture NP3 and NP4 Type RCC concrete Pipes in accordance to I.S. 458-2003 codes and specifications.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[26px] mb-[42px]">
+            <div class="bg-white border border-line p-[26px]">
+                <h2 class="text-[26px] font-bold text-ink mb-4">Specifications</h2>
+                <ul class="list-disc pl-5 space-y-2 text-slate leading-7">
+                    <li><strong class="text-ink">Size Range:</strong> 600 mm to 2000 mm diameter</li>
+                    <li><strong class="text-ink">Standards:</strong> I.S. 458 -2003</li>
+                    <li><strong class="text-ink">Available Shapes:</strong> Bell and Spigot, rubber ring joint</li>
+                </ul>
+            </div>
+            <div class="bg-white border border-line p-[26px]">
+                <h2 class="text-[26px] font-bold text-ink mb-4">Specialities</h2>
+                <ul class="list-disc pl-5 space-y-2 text-slate leading-7">
+                    <li>Leak-proof</li>
+                    <li>Easy to repair</li>
+                    <li>Non-reactive to sewage toxins</li>
+                    <li>Strong and sustainable</li>
+                    <li>Very smooth surface (internal and external)</li>
+                    <li>No Cracks</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px] text-center">Indian Standard</p>
+    <h2 class="text-[42px] font-bold text-ink mb-[26px] text-center">IS 458 : 2003 &mdash; Load Specifications</h2>
+    <div class="overflow-x-auto border border-line bg-white">
+        <table id="spec-table" class="min-w-full bg-white text-sm text-left">
+            <caption class="sr-only">
+                IS 458:2003 RCC concrete pipe specifications by internal diameter: minimum barrel thickness,
+                effective length, load to produce a 0.25 mm crack, and ultimate load in kilonewtons per linear metre.
+            </caption>
+            <thead class="bg-ink text-white">
+                <tr>
+                    <th scope="col" class="px-6 py-4 font-bold sticky left-0 bg-ink">Internal Diameter (mm)</th>
+                    <th scope="col" class="px-6 py-4 font-bold">Min Thickness (mm)</th>
+                    <th scope="col" class="px-6 py-4 font-bold">Effective Length (m)</th>
+                    <th scope="col" class="px-6 py-4 font-bold">Load for .25mm crack (KN/m)</th>
+                    <th scope="col" class="px-6 py-4 font-bold">Ultimate Load (KN/m)</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line border-t-2 border-ink">
+                <% products.forEach((row, index) => { %>
+                    <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-neutral' %> hover:bg-[#dbe4ff]">
+                        <td class="px-6 py-4 sticky left-0 <%= index % 2 === 0 ? 'bg-white' : 'bg-neutral' %> font-medium text-ink"><%= row.internal_diameter %></td>
+                        <td class="px-6 py-4 text-slate"><%= row.min_thickness %></td>
+                        <td class="px-6 py-4 text-slate"><%= row.effective_length %></td>
+                        <td class="px-6 py-4 text-slate"><%= row.load_crack %></td>
+                        <td class="px-6 py-4 text-slate"><%= row.ultimate_load %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+    <p class="text-sm text-slate mt-4">Loads per IS 458:2003 for hume pipes with bell &amp; spigot rubber ring joints. Effective length 2.5 m for all diameters.</p>
+
+    <div class="mt-[68px] bg-neutral border border-line p-[42px] text-center">
+        <h2 class="text-[42px] font-bold text-ink mb-[10px]">Need a quote for your size?</h2>
+        <p class="text-lg text-slate mb-[26px]" id="quote">Send us your pipe type, diameter, quantity, and delivery site &mdash; our team responds within one business day.</p>
+        <a href="/contact#enquiry-form" class="bg-accent hover:bg-amber-400 text-ink px-8 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Request Quotation</a>
+    </div>
+</div>
+
+<% const faqs = [
+        { q: 'What sizes of RCC concrete pipes do you manufacture?', a: 'We manufacture NP3 and NP4 RCC concrete pipes from 600 mm to 2000 mm internal diameter, with effective lengths of 2.5 metres, in accordance with IS 458:2003.' },
+        { q: 'Which pipe shapes and joints are available?', a: 'We supply bell and spigot shapes with rubber ring joints, which provide deviation flexibility and leak-proof performance in sewage and drainage systems.' },
+        { q: 'What is the difference between NP3 and NP4 pipes?', a: 'Both classes follow IS 458:2003. NP4 pipes carry higher load specifications than NP3, making them suitable for heavier traffic conditions. We can advise the right class for your site load.' },
+        { q: 'How is pipe quality verified before delivery?', a: 'Every batch undergoes random testing using the three edge bearing load test and hydro test, ensuring load compliance and leak-proof performance before dispatch.' },
+        { q: 'Do you deliver and export outside Kathmandu?', a: 'Our plant is in Satungal, Kathmandu. We supply customers across Nepal and export RCC pipes internationally. Send us your delivery site for a quotation.' }
+    ]; %>
+<%- include('partials/faq', { faqs }) %>
+
+<%- include('partials/footer') %>

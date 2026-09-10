@@ -1,0 +1,92 @@
+<%- include('../partials/admin-header') %>
+
+<%
+    const returnTo = String(query.returnTo || '').startsWith('/admin/enquiries')
+        ? query.returnTo
+        : '/admin/enquiries';
+%>
+<a href="<%= returnTo %>" class="text-primary font-bold text-sm hover:underline mb-6 inline-block">&larr; Back to Enquiries</a>
+
+<h1 class="text-[42px] font-bold text-ink mb-8">Enquiry Detail</h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white p-8 border border-line">
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-[26px] font-bold text-ink"><%= enquiry.client_name %></h2>
+                <span class="text-xs font-bold px-3 py-1.5 <%= enquiry.status === 'pending' ? 'bg-amber-100 text-amber-700' : enquiry.status === 'reviewed' ? 'bg-cyan-100 text-cyan-700' : 'bg-green-100 text-green-700' %>"><%= enquiry.status %></span>
+            </div>
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div>
+                    <dt class="font-bold text-primary mb-1">Company</dt>
+                    <dd class="text-slate"><%= enquiry.company_name || '—' %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Email</dt>
+                    <dd><a href="mailto:<%= enquiry.email %>" class="text-primary hover:underline"><%= enquiry.email %></a></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Phone</dt>
+                    <dd class="text-slate"><%= enquiry.phone %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Received</dt>
+                    <dd class="text-slate"><%= new Date(enquiry.created_at).toLocaleString() %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Pipe Type</dt>
+                    <dd class="text-slate"><%= enquiry.pipe_type || '—' %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Pipe Diameter</dt>
+                    <dd class="text-slate"><%= enquiry.pipe_diameter ? (enquiry.pipe_diameter === 'Multiple' ? 'Multiple sizes' : enquiry.pipe_diameter + ' mm') : '—' %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Quantity</dt>
+                    <dd class="text-slate"><%= enquiry.quantity || '—' %></dd>
+                </div>
+                <div>
+                    <dt class="font-bold text-primary mb-1">Delivery Site</dt>
+                    <dd class="text-slate"><%= enquiry.delivery_site || '—' %></dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white p-8 border border-line">
+            <h2 class="text-[26px] font-bold text-ink mb-4">Message</h2>
+            <p class="text-slate leading-7 whitespace-pre-line"><%= enquiry.message || 'No message provided.' %></p>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white p-8 border border-line">
+            <h2 class="text-[26px] font-bold text-ink mb-4">Update Status</h2>
+            <form method="post" action="/admin/enquiries/<%= enquiry.id %>/status" class="space-y-4">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="hidden" name="redirect" value="/admin/enquiries/<%= enquiry.id %>?returnTo=<%= encodeURIComponent(returnTo) %>">
+                <select name="status"
+                    class="w-full border border-line p-2.5 <%= enquiry.status === 'pending' ? 'bg-amber-50' : enquiry.status === 'reviewed' ? 'bg-cyan-50' : 'bg-green-50' %>">
+                    <option value="pending" <%= enquiry.status === 'pending' ? 'selected' : '' %>>pending</option>
+                    <option value="reviewed" <%= enquiry.status === 'reviewed' ? 'selected' : '' %>>reviewed</option>
+                    <option value="contacted" <%= enquiry.status === 'contacted' ? 'selected' : '' %>>contacted</option>
+                </select>
+                <button type="submit" class="w-full bg-primary hover:bg-primaryDark text-white py-2.5 font-bold text-sm">Save Status</button>
+            </form>
+            <% if (enquiry.status === 'contacted') { %>
+                <p class="text-xs text-green-700 mt-3 bg-green-50 border border-green-200 p-3">The client was automatically notified by email when this enquiry was marked contacted.</p>
+            <% } else { %>
+                <p class="text-xs text-slate mt-3">Marking as <strong>contacted</strong> automatically emails the client a follow-up.</p>
+            <% } %>
+        </div>
+
+        <div class="bg-white p-8 border border-line">
+            <h2 class="text-[26px] font-bold text-ink mb-4">Quick Actions</h2>
+            <ul class="space-y-3 text-sm">
+                <li><a href="mailto:<%= enquiry.email %>?subject=<%= encodeURIComponent('Your enquiry with Contech Concrete') %>&body=<%= encodeURIComponent('Dear ' + enquiry.client_name + ',\n\n') %>" class="text-primary font-bold hover:underline">Email client manually</a></li>
+                <li><a href="tel:<%= enquiry.phone %>" class="text-primary font-bold hover:underline">Call <%= enquiry.phone %></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

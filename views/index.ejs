@@ -1,0 +1,89 @@
+<%- include('partials/header') %>
+
+<!-- Hero Section -->
+<section class="bg-white border-b-2 border-line">
+    <div class="container mx-auto flex flex-col lg:flex-row">
+        <div class="flex flex-col justify-center px-[26px] md:px-[68px] py-[68px] md:py-[110px] lg:w-[38%]">
+            <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px]">RCC Concrete Pipe Manufacturer</p>
+            <h1 class="text-[42px] md:text-[68px] font-bold text-ink leading-[1.05] mb-6">Building the Future of Infrastructure</h1>
+            <p class="text-[18px] md:text-[26px] text-slate leading-[1.6] mb-8">Manufacturer, Exporter, and Supplier of premium RCC Concrete Pipes in Nepal.</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="#quote" class="bg-accent hover:bg-amber-400 text-ink text-center px-8 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">Request Quotation</a>
+                <a href="/products" class="text-ink text-center px-8 py-4 font-bold border-2 border-ink hover:bg-ink hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">Browse Specifications</a>
+            </div>
+        </div>
+        <div class="lg:w-[62%]">
+            <img src="/hero.svg" alt="RCC concrete pipe cross-section per IS 458:2003 and vibro-cast pipes ready for dispatch"
+                class="w-full h-[260px] lg:h-full object-cover">
+        </div>
+    </div>
+</section>
+
+<!-- Stat Strip -->
+<section class="bg-ink text-white">
+    <div class="container mx-auto px-4 py-[26px] grid grid-cols-2 md:grid-cols-4 gap-[26px] text-center">
+        <div>
+            <p class="text-[26px] font-bold text-accent">2014</p>
+            <p class="text-xs tracking-[0.05em] uppercase text-[#c7d3ff] mt-1">Established</p>
+        </div>
+        <div>
+            <p class="text-[26px] font-bold text-accent">IS 458:2003</p>
+            <p class="text-xs tracking-[0.05em] uppercase text-[#c7d3ff] mt-1">Standard</p>
+        </div>
+        <div>
+            <p class="text-[26px] font-bold text-accent">600&ndash;2000 mm</p>
+            <p class="text-xs tracking-[0.05em] uppercase text-[#c7d3ff] mt-1">Diameters</p>
+        </div>
+        <div>
+            <p class="text-[26px] font-bold text-accent">1 day</p>
+            <p class="text-xs tracking-[0.05em] uppercase text-[#c7d3ff] mt-1">Quote response</p>
+        </div>
+    </div>
+</section>
+
+<!-- Content Sections -->
+<section class="py-[68px] md:py-[110px] bg-neutral">
+    <div class="container mx-auto px-4">
+        <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px] text-center">Why Contech</p>
+        <h2 class="text-[42px] font-bold text-ink mb-[42px] text-center">Why Choose Contech?</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-[26px]">
+            <div class="bg-white border border-line p-[26px]">
+                <p class="text-accent text-xs font-bold tracking-[0.05em] mb-[10px]">01</p>
+                <h3 class="text-[26px] font-bold text-ink mb-4">Advanced Technology</h3>
+                <p class="text-slate leading-7">Vertical Vibro casting manufacturing process ensuring smooth surface without cracks and longer life.</p>
+            </div>
+            <div class="bg-white border border-line p-[26px]">
+                <p class="text-accent text-xs font-bold tracking-[0.05em] mb-[10px]">02</p>
+                <h3 class="text-[26px] font-bold text-ink mb-4">Quality Assurance</h3>
+                <p class="text-slate leading-7">Rigorous testing for every batch of products to ensure international standard compliance (I.S. 458-2003).</p>
+            </div>
+            <div class="bg-white border border-line p-[26px]">
+                <p class="text-accent text-xs font-bold tracking-[0.05em] mb-[10px]">03</p>
+                <h3 class="text-[26px] font-bold text-ink mb-4">Trusted Partner</h3>
+                <p class="text-slate leading-7">A joint venture of Contech Pvt Ltd, established in 2014 with strong business ethics.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enquiry / Quotation Section -->
+<section id="quote" class="py-[68px] md:py-[110px] bg-white">
+    <div class="container mx-auto px-4">
+        <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px] text-center">Request a Quote</p>
+        <h2 class="text-[42px] font-bold text-ink mb-[10px] text-center">Get a Quote</h2>
+        <p class="text-lg text-slate text-center mb-[42px]">Send us your pipe specifications and we will get back to you with a quotation.</p>
+        <div class="max-w-3xl mx-auto">
+            <%- include('partials/enquiry-form') %>
+        </div>
+    </div>
+</section>
+
+<% const faqs = [
+        { q: 'Are you an RCC concrete pipe manufacturer in Nepal?', a: 'Yes. Contech Concrete and Allied Industries has manufactured, exported, and supplied RCC concrete pipes from Satungal, Kathmandu since 2014.' },
+        { q: 'What pipe sizes and standards do you support?', a: 'We manufacture NP3 and NP4 pipes from 600 mm to 2000 mm internal diameter to IS 458:2003, with bell and spigot rubber ring joints.' },
+        { q: 'How do I get a quotation?', a: 'Use the request-a-quotation form on this page or the contact page. Include your pipe type, diameter, quantity, and delivery site, and our team responds within one business day.' },
+        { q: 'Is your quality tested?', a: 'Every batch is random-tested with three edge bearing load tests and hydro tests to confirm IS 458:2003 load and leak-proof compliance.' }
+    ]; %>
+<%- include('partials/faq', { faqs, faqTitle: 'Frequently Asked Questions' }) %>
+
+<%- include('partials/footer') %>

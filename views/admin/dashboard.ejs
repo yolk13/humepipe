@@ -1,0 +1,58 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="text-[42px] font-bold text-ink mb-8">Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white p-6 border border-line text-center">
+        <p class="text-4xl font-bold text-primary"><%= counts.total || 0 %></p>
+        <p class="text-sm text-slate font-bold mt-2">Total Enquiries</p>
+    </div>
+    <div class="bg-white p-6 border border-line text-center">
+        <p class="text-4xl font-bold text-accent"><%= counts.pending || 0 %></p>
+        <p class="text-sm text-slate font-bold mt-2">Pending</p>
+    </div>
+    <div class="bg-white p-6 border border-line text-center">
+        <p class="text-4xl font-bold text-primary"><%= counts.reviewed || 0 %></p>
+        <p class="text-sm text-slate font-bold mt-2">Reviewed</p>
+    </div>
+    <div class="bg-white p-6 border border-line text-center">
+        <p class="text-4xl font-bold text-green-600"><%= counts.contacted || 0 %></p>
+        <p class="text-sm text-slate font-bold mt-2">Contacted</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white p-6 border border-line">
+        <h2 class="text-[26px] font-bold text-ink mb-4">Recent Enquiries</h2>
+        <% if (recent.length === 0) { %>
+            <p class="text-slate">No enquiries yet.</p>
+        <% } else { %>
+            <ul class="divide-y divide-line">
+                <% recent.forEach(e => { %>
+                    <li class="py-3 flex justify-between items-center">
+                        <div>
+                            <a href="/admin/enquiries/<%= e.id %>" class="font-bold text-sm text-primary hover:underline"><%= e.client_name %></a>
+                            <% if (e.company_name) { %>(<%= e.company_name %>)<% } %>
+                            <p class="text-xs text-slate"><%= e.pipe_type || 'No type' %> &middot; <%= e.email %></p>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 <%= e.status === 'pending' ? 'bg-amber-100 text-amber-700' : e.status === 'reviewed' ? 'bg-cyan-100 text-cyan-700' : 'bg-green-100 text-green-700' %>"><%= e.status %></span>
+                    </li>
+                <% }) %>
+            </ul>
+            <a href="/admin/enquiries" class="text-primary font-bold text-sm hover:underline mt-4 inline-block">View all &rarr;</a>
+        <% } %>
+    </div>
+    <div class="bg-white p-6 border border-line">
+        <h2 class="text-[26px] font-bold text-ink mb-4">Quick Actions</h2>
+        <ul class="space-y-3 text-sm">
+            <li><a href="/admin/blogs/new" class="text-primary font-bold hover:underline">+ New Blog Post</a></li>
+            <li><a href="/admin/products" class="text-primary font-bold hover:underline">Edit Product Specs</a></li>
+            <li><a href="/admin/enquiries" class="text-primary font-bold hover:underline">Review Enquiries</a></li>
+        </ul>
+        <div class="mt-6 pt-4 border-t border-line">
+            <p class="text-sm text-slate">Published blogs: <strong class="text-ink"><%= blogsCount %></strong></p>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

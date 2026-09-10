@@ -1,73 +1,118 @@
-# Contech Hume Pipes — B2B Industrial Portal
+# Contech Concrete — Marketing Site + Admin (Express draft)
 
-B2B website for **Contech Concrete and Allied Industries Pvt. Ltd.** — a hume-pipe manufacturer targeting civil contractors, procurement managers, and site engineers. Core conversion metric is **RFQ submission** (dynamic line items + mandatory delivery-site logistics field).
+Standalone Express + EJS implementation of the Contech Concrete B2B site: product spec tables,
+blog, RFQ enquiry pipeline, and a full admin panel. SQLite-backed, no build step.
 
-- **Stack:** Next.js 16 (App Router, Turbopack, SSR/ISR) + Payload CMS 3 (Express + SQLite) + Tailwind CSS v4 + Framer Motion + Lenis
-- **Monorepo:** npm workspaces, single root lockfile
+> This folder (`new plan/`) is an earlier Express-era draft. The committed architecture is the
+> Payload CMS + Next.js workspaces at the repo root (`web/` + `cms/`). This draft is kept runnable
+> for reference — see the root `AGENTS.md`.
 
-## Architecture
+## Requirements
 
-```
-┌─────────────┐   REST / ISR   ┌──────────────────┐   SQLite
-│  Next.js    │────────────────▶ Payload CMS      │──────────▶ contech.db
-│  (web)      │   HTTP-only    │  REST + /admin   │   media/
-└─────────────┘                └──────────────────┘
-   :3002                            :3001
-```
+- Node.js 20+ (tested on 22/25)
+- `npm` (a single `npm install` here — this folder has its own `package-lock.json`)
 
-The Payload Admin Panel doubles as the PRD admin dashboard (RFQ pipeline + spec-table CMS). Not an e-commerce store.
-
-## Workspaces
-
-| Package | Path | Role |
-|---|---|---|
-| `web` | `web/` | Next.js 16 marketing site (port **3002**) |
-| `cms` | `cms/` | Payload CMS 3 admin + REST API (port **3001**) |
-| `@contech/shared` | `packages/shared` | Shared TS types (product specs, RFQ, blog) |
-
-## Getting Started
-
-Requires Node >= 20.9.
+## Quick start
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env   # then set SESSION_SECRET at minimum
+npm run seed           # creates db/contech.db + admin user + 11 products + 2 blogs
+npm run dev            # http://localhost:3000 (use PORT=3100 if 3000 is taken)
 ```
 
-- Web: http://localhost:3002
-- CMS admin: http://localhost:3001/admin
+Seeded admin login (printed once at seed):
 
-> Port 3000 is occupied by an environment-owned process — never assume 3000.
+```
+Email:    admin@contech.com.np
+Password: Contech#2026
+```
 
-## Scripts (run from root)
+**Change this password after first login.**
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Parallel dev servers (web + cms) |
-| `npm run build` | Build web, then cms |
-| `npm run lint` | ESLint (web) |
-| `npm run typecheck` | Typecheck shared package |
+## Scripts
 
-After editing Payload collections, regenerate types:
+| Command            | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| `npm run dev`      | Run with file-watch reload (`node --watch`)         |
+| `npm start`        | Run in production mode                              |
+| `npm run seed`     | Idempotently seed products, blogs, admin user       |
+| `npm test`         | Run the `node:test` + supertest suite (isolated temp DB) |
+
+The server honors the `PORT` env var (3000 is environment-owned on dev machines — use 3001+).
+
+## Environment variables
+
+See `.env.example` for the full list. Key ones:
+
+| Variable         | Purpose                                                              |
+| ---------------- | -------------------------------------------------------------------- |
+| `PORT`           | HTTP port (default 3000)                                             |
+| `SESSION_SECRET` | **Required in production.** Session signing secret                   |
+| `SMTP_HOST`      | SMTP server. If unset, emails are logged to console only            |
+| `SMTP_USER/PASS` | SMTP credentials                                                     |
+| `SMTP_FROM`      | Sender address (`Contech Concrete <info@contech.com.np>` by default) |
+| `ADMIN_EMAIL`    | Receives new-enquiry admin alerts                                    |
+| `SITE_URL`       | Public site URL (used in admin alert email links)                    |
+| `DB_PATH`        | SQLite file override (used by tests)                                 |
+
+## Email notifications
+
+Without `SMTP_HOST`, every email (client confirmation, admin alert, contacted follow-up) is
+logged to the console in a readable format — useful for local development and tests. Configure
+`SMTP_HOST` to actually deliver.
+
+## Admin panel
+
+| Route                      | Purpose                                  |
+| -------------------------- | ---------------------------------------- |
+| `/admin/dashboard`         | Counts, recent enquiries, quick actions  |
+| `/admin/blogs`             | Blog CRUD (+ featured image upload)      |
+| `/admin/products`          | Product spec CRUD (+ image upload)       |
+| `/admin/enquiries`         | Enquiry pipeline: search, status filter, pagination |
+| `/admin/enquiries/:id`     | Enquiry detail + status change           |
+
+Security: session auth (bcrypt), CSRF tokens on all admin POSTs, Helmet CSP, `sanitize-html` on
+blog render, uploads restricted to image MIME types (5 MB), rate-limited enquiry API.
+
+## Tests
 
 ```bash
-npm run generate:types --workspace cms
-npm run generate:importmap --workspace cms
+npm test
 ```
 
-## Seed Data
+The suite (`test/app.test.js`) boots the app against a throwaway SQLite DB in the OS temp dir
+and covers: public routes, blog rendering + sanitization, enquiry API validation, auth + CSRF,
+enquiry list pagination/search/detail, status updates, blog/product CRUD round trips, upload
+rejection, and robots.txt AI-crawler allowances.
 
-The SQLite DB is not committed. To recreate it (e.g. after adding a collection on Windows, which breaks dev-schema push):
+## Docker
 
 ```bash
-# stop CMS servers, delete cms/contech.db
-cd cms
-npm run generate:types
-npx tsx scripts/seed-products.ts
+docker compose up --build
 ```
 
-## Docs
+Volumes persist `public/uploads` (product/blog images) and `db/contech.db`. Set secrets via a
+`.env` file (docker compose reads it automatically) or the `environment` block.
 
-- `requirements.md` — PRD (source of truth for product/site requirements)
-- `plan.md` — system design & implementation phases
-- `stitch_contech_b2b_infrastructure_portal/` — design prototypes (code.html) + design system (DESIGN.md)
+## Project layout
+
+```
+server.js            Express app (routes, auth, CSRF, CSP, emails) — exports the app for tests
+db/database.js       SQLite schema + idempotent migrations (DB_PATH override)
+db/seed.js           Idempotent seed (products, blogs, admin user)
+db/session-store.js  SQLite-backed express-session store
+lib/upload.js        Multer config + upload cleanup
+lib/mailer.js        SMTP transport + console fallback
+config/site.js       Company/contact details
+views/               Public + admin EJS views
+public/              Tailwind (CDN), robots.txt, uploads/
+test/app.test.js     node:test + supertest suite
+```
+
+## Notes / conventions
+
+- Golden-ratio spacing, sharp corners, borders-not-shadows, royal blue `#4169E1` + amber CTA.
+- `robots.txt` explicitly allows AI/answer-engine crawlers (ChatGPT-User, OAI-SearchBot,
+  Google-Extended, PerplexityBot) for AEO/GEO.
+- Blog content is sanitized at render; email clients get plain-text fallbacks.

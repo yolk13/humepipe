@@ -1,0 +1,33 @@
+</main>
+    <footer class="bg-primary text-white mt-16 py-12">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-[42px]">
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contech Concrete</h3>
+                <p class="text-sm text-[#c7d3ff] leading-7">Manufacturer, Exporter, and Supplier of RCC Concrete Pipes. Serving Nepal with high-quality infrastructure solutions.</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                <ul class="space-y-2 text-sm text-[#c7d3ff]">
+                    <li><a href="/about" class="hover:text-accent">About Us</a></li>
+                    <li><a href="/products" class="hover:text-accent">Products</a></li>
+                    <li><a href="/quality" class="hover:text-accent">Quality</a></li>
+                    <li><a href="/technology" class="hover:text-accent">Technology</a></li>
+                    <li><a href="/blogs" class="hover:text-accent">Blogs</a></li>
+                    <li><a href="/contact" class="hover:text-accent">Request Quotation</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact</h3>
+                <p class="text-sm text-[#c7d3ff]"><%= site.address %></p>
+                <p class="text-sm text-[#c7d3ff] mt-2"><%= site.phone %></p>
+                <p class="text-sm mt-2"><a href="mailto:<%= site.email %>" class="text-[#c7d3ff] hover:text-accent"><%= site.email %></a></p>
+                <p class="text-sm mt-2 text-slate-300"><%= site.companyName %></p>
+            </div>
+        </div>
+        <div class="text-center text-sm text-[#c7d3ff] mt-12 border-t border-slate-600 pt-4">
+            &copy; <%= new Date().getFullYear() %> Contech Concrete and Allied Industries Pvt. Ltd. All rights reserved.
+        </div>
+    </footer>
+    <script src="/nav.js"></script>
+</body>
+</html>

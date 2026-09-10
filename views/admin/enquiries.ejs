@@ -1,0 +1,118 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="text-[42px] font-bold text-ink mb-8">Enquiries</h1>
+
+<form method="get" action="/admin/enquiries" class="mb-6">
+    <input type="hidden" name="status" value="<%= status %>">
+    <div class="flex gap-3">
+        <input type="search" name="q" value="<%= q %>" placeholder="Search name, company, email, phone, message..."
+            class="flex-1 border border-line p-2.5 text-sm">
+        <button type="submit" class="bg-primary hover:bg-primaryDark text-white px-6 py-2 font-bold text-sm">Search</button>
+        <% if (q) { %>
+            <a href="/admin/enquiries?<%= listQueryString({ status, q: '', page: 1 }) %>"
+                class="bg-line hover:bg-slate-200 text-ink px-6 py-2 font-bold text-sm">Clear</a>
+        <% } %>
+    </div>
+</form>
+
+<div class="flex flex-wrap gap-3 mb-8 text-sm">
+    <a href="/admin/enquiries?<%= listQueryString({ status: 'all', q, page: 1 }) %>"
+        class="px-4 py-2 font-bold <%= status === 'all' ? 'bg-primary text-white' : 'bg-white border border-line' %>">All (<%= counts.total || 0 %>)</a>
+    <a href="/admin/enquiries?<%= listQueryString({ status: 'pending', q, page: 1 }) %>"
+        class="px-4 py-2 font-bold <%= status === 'pending' ? 'bg-primary text-white' : 'bg-white border border-line' %>">Pending (<%= counts.pending || 0 %>)</a>
+    <a href="/admin/enquiries?<%= listQueryString({ status: 'reviewed', q, page: 1 }) %>"
+        class="px-4 py-2 font-bold <%= status === 'reviewed' ? 'bg-primary text-white' : 'bg-white border border-line' %>">Reviewed (<%= counts.reviewed || 0 %>)</a>
+    <a href="/admin/enquiries?<%= listQueryString({ status: 'contacted', q, page: 1 }) %>"
+        class="px-4 py-2 font-bold <%= status === 'contacted' ? 'bg-primary text-white' : 'bg-white border border-line' %>">Contacted (<%= counts.contacted || 0 %>)</a>
+</div>
+
+<% if (q) { %>
+    <p class="text-sm text-slate mb-4">Results for "<strong class="text-ink"><%= q %></strong>"</p>
+<% } %>
+
+<% if (enquiries.length === 0) { %>
+    <div class="bg-white border border-line p-12 text-center text-slate">
+        <p class="text-xl mb-2">No enquiries found.</p>
+        <p class="text-sm"><%= q ? 'Try a different search or clear the filter.' : 'No enquiries in this view yet.' %></p>
+    </div>
+<% } else { %>
+    <p class="text-sm text-slate mb-3">Showing <%= (page - 1) * perPage + 1 %>&ndash;<%= Math.min(page * perPage, total) %> of <%= total %></p>
+    <div class="bg-white border border-line overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th class="px-4 py-3 text-left font-bold">Client</th>
+                    <th class="px-4 py-3 text-left font-bold">Contact</th>
+                    <th class="px-4 py-3 text-left font-bold">Pipe / Qty</th>
+                    <th class="px-4 py-3 text-left font-bold">Delivery Site</th>
+                    <th class="px-4 py-3 text-left font-bold">Message</th>
+                    <th class="px-4 py-3 text-left font-bold">Received</th>
+                    <th class="px-4 py-3 text-left font-bold">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                <% enquiries.forEach(e => { %>
+                    <% const returnTo = encodeURIComponent('/admin/enquiries?' + listQueryString({ status, q, page })); %>
+                    <tr class="align-top hover:bg-neutral">
+                        <td class="px-4 py-3 font-bold">
+                            <a href="/admin/enquiries/<%= e.id %>?returnTo=<%= returnTo %>" class="text-primary hover:underline">
+                                <%= e.client_name %>
+                            </a>
+                            <% if (e.company_name) { %><p class="text-xs text-slate font-normal"><%= e.company_name %></p><% } %>
+                        </td>
+                        <td class="px-4 py-3 text-slate">
+                            <%= e.email %>
+                            <p class="text-xs text-slate"><%= e.phone %></p>
+                        </td>
+                        <td class="px-4 py-3 text-slate">
+                            <%= e.pipe_type || '—' %>
+                            <% if (e.pipe_diameter) { %><p class="text-xs text-slate"><%= e.pipe_diameter === 'Multiple' ? 'Multiple sizes' : e.pipe_diameter + ' mm' %></p><% } %>
+                            <% if (e.quantity) { %><p class="text-xs text-slate">Qty: <%= e.quantity %></p><% } %>
+                        </td>
+                        <td class="px-4 py-3 text-slate">
+                            <%= e.delivery_site || '—' %>
+                        </td>
+                        <td class="px-4 py-3 text-slate max-w-xs">
+                            <a href="/admin/enquiries/<%= e.id %>?returnTo=<%= returnTo %>" class="hover:text-primary line-clamp-2"><%= e.message || '—' %></a>
+                        </td>
+                        <td class="px-4 py-3 text-slate text-xs"><%= new Date(e.created_at).toLocaleString() %></td>
+                        <td class="px-4 py-3">
+                            <form method="post" action="/admin/enquiries/<%= e.id %>/status" class="flex items-center gap-2">
+                                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                                <input type="hidden" name="redirect" value="/admin/enquiries?<%= listQueryString({ status, q, page }) %>">
+                                <select name="status" onchange="this.form.submit()"
+                                    class="border border-line p-1.5 text-sm <%= e.status === 'pending' ? 'bg-amber-50' : e.status === 'reviewed' ? 'bg-cyan-50' : 'bg-green-50' %>">
+                                    <option value="pending" <%= e.status === 'pending' ? 'selected' : '' %>>pending</option>
+                                    <option value="reviewed" <%= e.status === 'reviewed' ? 'selected' : '' %>>reviewed</option>
+                                    <option value="contacted" <%= e.status === 'contacted' ? 'selected' : '' %>>contacted</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <% if (totalPages > 1) { %>
+        <div class="flex items-center justify-between mt-6 text-sm">
+            <span class="text-slate">Page <%= page %> of <%= totalPages %></span>
+            <div class="flex gap-2">
+                <% if (page > 1) { %>
+                    <a href="/admin/enquiries?<%= listQueryString({ status, q, page: page - 1 }) %>"
+                        class="px-4 py-2 font-bold bg-white border border-line hover:bg-neutral">&larr; Prev</a>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <a href="/admin/enquiries?<%= listQueryString({ status, q, page: i }) %>"
+                        class="px-4 py-2 font-bold <%= i === page ? 'bg-primary text-white' : 'bg-white border border-line hover:bg-neutral' %>"><%= i %></a>
+                <% } %>
+                <% if (page < totalPages) { %>
+                    <a href="/admin/enquiries?<%= listQueryString({ status, q, page: page + 1 }) %>"
+                        class="px-4 py-2 font-bold bg-white border border-line hover:bg-neutral">Next &rarr;</a>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+<% } %>
+
+<%- include('../partials/admin-footer') %>

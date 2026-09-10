@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<div class="container mx-auto px-4 py-[68px] md:py-[110px]">
+    <p class="text-xs font-bold tracking-[0.05em] uppercase text-primary mb-[10px] text-center">Quotation</p>
+    <h1 class="text-[42px] md:text-[68px] font-bold text-ink mb-[10px] text-center">Request a Quotation</h1>
+    <p class="text-lg text-slate text-center mb-[68px]">Tell us about your project and pipe requirements. Our team responds within one business day.</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-[42px]">
+        <div class="lg:col-span-2">
+            <%- include('partials/enquiry-form') %>
+        </div>
+        <div>
+            <div class="bg-white border border-line p-[26px] space-y-[26px]">
+                <h2 class="text-[26px] font-bold text-ink">Contact</h2>
+                <div>
+                    <p class="font-bold text-sm text-primary">Plant Location</p>
+                    <p class="text-sm text-slate mt-1"><%= site.address %></p>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-primary">Phone</p>
+                    <p class="text-sm text-slate mt-1"><%= site.phone %></p>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-primary">Email</p>
+                    <p class="text-sm text-slate mt-1"><a href="mailto:<%= site.email %>" class="text-primary hover:underline"><%= site.email %></a></p>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-primary">Products</p>
+                    <p class="text-sm text-slate mt-1">NP3 &amp; NP4 RCC concrete pipes, 600&ndash;2000 mm, per IS 458:2003</p>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-primary">Response Time</p>
+                    <p class="text-sm text-slate mt-1">Within 1 business day</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

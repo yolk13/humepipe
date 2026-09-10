@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= meta && meta.title ? meta.title : 'Contech Admin' %></title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/admin-config.js"></script>
+</head>
+<body class="bg-neutral text-ink font-sans">
+    <header class="bg-primary text-white">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <a href="/admin/dashboard" class="text-xl font-bold">Contech <span class="text-accent">Admin</span></a>
+            <nav class="flex flex-wrap items-center space-x-4 text-sm" aria-label="Admin">
+                <a href="/admin/dashboard" class="hover:text-[#c7d3ff]">Dashboard</a>
+                <a href="/admin/blogs" class="hover:text-[#c7d3ff]">Blogs</a>
+                <a href="/admin/products" class="hover:text-[#c7d3ff]">Products</a>
+                <a href="/admin/enquiries" class="hover:text-[#c7d3ff]">Enquiries</a>
+                <a href="/" target="_blank" class="hover:text-[#c7d3ff]">View Site</a>
+                <form method="post" action="/admin/logout" class="inline">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <button class="bg-accent hover:bg-amber-400 text-ink px-4 py-1.5 font-bold">Logout</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+    <% if (flash) { %>
+        <div class="container mx-auto px-4 mt-4">
+            <div class="p-4 text-sm font-bold <%= flash.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' %>">
+                <%= flash.text %>
+            </div>
+        </div>
+    <% } %>
+    <main class="container mx-auto px-4 py-8">

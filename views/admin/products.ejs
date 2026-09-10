@@ -1,0 +1,97 @@
+<%- include('../partials/admin-header') %>
+
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-[42px] font-bold text-ink">Product Specifications</h1>
+    <button type="button" onclick="document.getElementById('new-product-form').classList.toggle('hidden')"
+        class="bg-accent hover:bg-amber-400 text-ink px-6 py-2 font-bold text-sm">+ Add Product</button>
+</div>
+
+<div id="new-product-form" class="hidden bg-white p-6 border border-line mb-8">
+    <h2 class="text-xl font-bold text-ink mb-4">Add New Product</h2>
+    <form method="post" action="/admin/products" enctype="multipart/form-data" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div>
+            <label class="block text-xs font-bold mb-1">Diameter (mm)</label>
+            <input type="number" name="internal_diameter" required class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Min Thickness (mm)</label>
+            <input type="number" name="min_thickness" required class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Effective Length (m)</label>
+            <input type="number" step="0.1" name="effective_length" required class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Load .25mm crack (KN/m)</label>
+            <input type="number" step="0.01" name="load_crack" required class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Ultimate Load (KN/m)</label>
+            <input type="number" step="0.01" name="ultimate_load" required class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Type</label>
+            <input type="text" name="type" value="NP3/NP4" class="w-full border border-line p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-bold mb-1">Image (optional)</label>
+            <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" class="w-full border border-line p-2">
+        </div>
+        <div class="col-span-2 md:col-span-3">
+            <button type="submit" class="bg-primary hover:bg-primaryDark text-white px-6 py-2 font-bold text-sm">Save</button>
+        </div>
+    </form>
+</div>
+
+<div class="bg-white border border-line overflow-x-auto">
+    <table class="min-w-full text-sm">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th class="px-4 py-3 text-left font-bold">Diameter</th>
+                <th class="px-4 py-3 text-left font-bold">Thickness</th>
+                <th class="px-4 py-3 text-left font-bold">Length</th>
+                <th class="px-4 py-3 text-left font-bold">Load (crack)</th>
+                <th class="px-4 py-3 text-left font-bold">Ultimate</th>
+                <th class="px-4 py-3 text-left font-bold">Type</th>
+                <th class="px-4 py-3 text-right font-bold">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-line">
+            <% products.forEach(p => { %>
+                <tr>
+                    <td colspan="7" class="px-0 py-2">
+                        <form method="post" action="/admin/products/<%= p.id %>/edit" enctype="multipart/form-data" class="px-4 pt-3">
+                            <input type="hidden" name="_csrf" value="<%= csrf %>">
+                            <input type="hidden" name="image" value="<%= p.image || '' %>">
+                            <div class="grid grid-cols-2 md:grid-cols-7 gap-3 items-center">
+                                <input type="number" name="internal_diameter" value="<%= p.internal_diameter %>" required class="w-full border border-line p-2">
+                                <input type="number" name="min_thickness" value="<%= p.min_thickness %>" required class="w-full border border-line p-2">
+                                <input type="number" step="0.1" name="effective_length" value="<%= p.effective_length %>" required class="w-full border border-line p-2">
+                                <input type="number" step="0.01" name="load_crack" value="<%= p.load_crack %>" required class="w-full border border-line p-2">
+                                <input type="number" step="0.01" name="ultimate_load" value="<%= p.ultimate_load %>" required class="w-full border border-line p-2">
+                                <input type="text" name="type" value="<%= p.type %>" class="w-full border border-line p-2">
+                                <div class="flex justify-end items-center space-x-3">
+                                    <button type="submit" class="text-primary font-bold hover:underline">Save</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3">
+                                <% if (p.image) { %>
+                                    <img src="<%= p.image %>" alt="Product image" class="h-10 w-10 object-cover border border-line">
+                                <% } %>
+                                <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" class="text-xs">
+                            </div>
+                        </form>
+                        <form method="post" action="/admin/products/<%= p.id %>/delete" class="px-4 pb-3"
+                            onsubmit="return confirm('Delete this product row?');">
+                            <input type="hidden" name="_csrf" value="<%= csrf %>">
+                            <button type="submit" class="text-red-600 font-bold hover:underline text-xs">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../partials/admin-footer') %>
