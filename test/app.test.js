@@ -1,10 +1,5 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-
 process.env.NODE_ENV = 'test';
 process.env.SESSION_SECRET = 'test-secret-only';
-process.env.DB_PATH = path.join(os.tmpdir(), `contech-test-${process.pid}.db`);
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
@@ -22,6 +17,7 @@ function csrfFrom(html) {
 }
 
 before(async () => {
+    await db.initPromise;
     const res = await agent.get('/admin/login');
     assert.strictEqual(res.status, 200);
     const csrf = csrfFrom(res.text);
@@ -32,12 +28,8 @@ before(async () => {
         .expect('Location', '/admin/dashboard');
 });
 
-after(() => {
-    db.close();
-    for (const f of ['-wal', '-shm']) {
-        try { fs.unlinkSync(process.env.DB_PATH + f); } catch {}
-    }
-    try { fs.unlinkSync(process.env.DB_PATH); } catch {}
+after(async () => {
+    await db.close();
 });
 
 test('public pages return 200', async () => {
@@ -60,8 +52,12 @@ test('sanitize-html strips scripts from blog content', async () => {
     assert.strictEqual(res.text.includes('<script>'), false);
 });
 
+async function countEnquiries() {
+    return Number((await db.get('SELECT COUNT(*) c FROM enquiries')).c);
+}
+
 test('enquiry API: valid submission inserts a row and emails', async () => {
-    const beforeCount = db.prepare('SELECT COUNT(*) c FROM enquiries').get().c;
+    const beforeCount = await countEnquiries();
     await agent.post('/api/enquire')
         .type('form')
         .send({
@@ -77,7 +73,7 @@ test('enquiry API: valid submission inserts a row and emails', async () => {
         })
         .expect(200)
         .expect('Content-Type', /json/);
-    const afterCount = db.prepare('SELECT COUNT(*) c FROM enquiries').get().c;
+    const afterCount = await countEnquiries();
     assert.strictEqual(afterCount, beforeCount + 1);
 });
 
@@ -107,22 +103,24 @@ test('POST without CSRF token is rejected with 403', async () => {
 
 test('enquiries list: pagination, search, and detail', async () => {
     for (let i = 0; i < 25; i++) {
-        db.prepare(`INSERT INTO enquiries (id, client_name, company_name, email, phone, pipe_type, quantity, message, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now', '-' || ? || ' minutes'))`)
-            .run(`test-${i}`, `Searchable ${i}`, `Co ${i}`, `s${i}@example.com`, '977', 'NP3', 10, `Message ${i}`, i);
+        await db.run(
+            `INSERT INTO enquiries (id, client_name, company_name, email, phone, pipe_type, quantity, message, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `test-${i}`, `Searchable ${i}`, `Co ${i}`, `s${i}@example.com`, '977', 'NP3', 10, `Message ${i}`,
+            new Date(Date.now() - i * 60000).toISOString()
+        );
     }
     await agent.get('/admin/enquiries').expect(200).expect(/Page 1 of 2/);
     await agent.get('/admin/enquiries?page=2').expect(200).expect(/Page 2 of 2/);
-    await agent.get('/admin/enquiries?q=Searchable%2017').expect(200).expect(/Searchable 17/).expect(200);
+    await agent.get('/admin/enquiries?q=Searchable%2017').expect(200).expect(/Searchable 17/);
     const detail = await agent.get('/admin/enquiries/test-0').expect(200);
     assert.ok(detail.text.includes('Message 0'));
     await agent.get('/admin/enquiries/nope').expect(302).expect('Location', '/admin/enquiries');
-    db.prepare("DELETE FROM enquiries WHERE id LIKE 'test-%'").run();
+    await db.run("DELETE FROM enquiries WHERE id LIKE 'test-%'");
 });
 
 test('enquiry status update to contacted fires follow-up email and redirects safely', async () => {
-    const row = db.prepare("INSERT INTO enquiries (id, client_name, email, phone, status) VALUES ('st-1', 'Status Guy', 'status@example.com', '977', 'pending')");
-    row.run();
+    await db.run("INSERT INTO enquiries (id, client_name, email, phone, status) VALUES ('st-1', 'Status Guy', 'status@example.com', '977', 'pending')");
     const page = await agent.get('/admin/enquiries/st-1').expect(200);
     const csrf = csrfFrom(page.text);
     await agent.post('/admin/enquiries/st-1/status')
@@ -130,8 +128,9 @@ test('enquiry status update to contacted fires follow-up email and redirects saf
         .send({ _csrf: csrf, status: 'contacted', redirect: 'https://evil.example.com' })
         .expect(302)
         .expect('Location', '/admin/enquiries');
-    assert.strictEqual(db.prepare("SELECT status FROM enquiries WHERE id = 'st-1'").get().status, 'contacted');
-    db.prepare("DELETE FROM enquiries WHERE id = 'st-1'").run();
+    const row = await db.get("SELECT status FROM enquiries WHERE id = 'st-1'");
+    assert.strictEqual(row.status, 'contacted');
+    await db.run("DELETE FROM enquiries WHERE id = 'st-1'");
 });
 
 test('blog create -> edit -> delete round trip', async () => {
@@ -144,7 +143,7 @@ test('blog create -> edit -> delete round trip', async () => {
         .field('content', '<p>Hello</p>')
         .expect(302)
         .expect('Location', '/admin/blogs');
-    const blog = db.prepare("SELECT * FROM blogs WHERE title = 'Round Trip Blog'").get();
+    const blog = await db.get("SELECT * FROM blogs WHERE title = 'Round Trip Blog'");
     assert.ok(blog);
     assert.strictEqual(blog.slug, 'round-trip-blog');
     await agent.get(`/admin/blogs/${blog.id}/edit`).expect(200);
@@ -152,7 +151,8 @@ test('blog create -> edit -> delete round trip', async () => {
         .type('form')
         .send({ _csrf: csrf })
         .expect(302);
-    assert.strictEqual(db.prepare("SELECT COUNT(*) c FROM blogs WHERE title = 'Round Trip Blog'").get().c, 0);
+    const count = Number((await db.get("SELECT COUNT(*) c FROM blogs WHERE title = 'Round Trip Blog'")).c);
+    assert.strictEqual(count, 0);
 });
 
 test('product add -> edit -> delete round trip', async () => {
@@ -168,7 +168,7 @@ test('product add -> edit -> delete round trip', async () => {
         .field('ultimate_load', '150')
         .expect(302)
         .expect('Location', '/admin/products');
-    const prod = db.prepare('SELECT * FROM products WHERE internal_diameter = 2500').get();
+    const prod = await db.get('SELECT * FROM products WHERE internal_diameter = 2500');
     assert.ok(prod);
     await agent.post(`/admin/products/${prod.id}/edit`)
         .type('form')
@@ -179,12 +179,14 @@ test('product add -> edit -> delete round trip', async () => {
         .field('load_crack', '100')
         .field('ultimate_load', '150')
         .expect(302);
-    assert.strictEqual(db.prepare('SELECT min_thickness FROM products WHERE id = ?').get(prod.id).min_thickness, 210);
+    const edited = await db.get('SELECT min_thickness FROM products WHERE id = ?', prod.id);
+    assert.strictEqual(edited.min_thickness, 210);
     await agent.post(`/admin/products/${prod.id}/delete`)
         .type('form')
         .send({ _csrf: csrf })
         .expect(302);
-    assert.strictEqual(db.prepare('SELECT COUNT(*) c FROM products WHERE id = ?').get(prod.id).c, 0);
+    const count = Number((await db.get('SELECT COUNT(*) c FROM products WHERE id = ?', prod.id)).c);
+    assert.strictEqual(count, 0);
 });
 
 test('non-image upload is rejected with flash redirect', async () => {

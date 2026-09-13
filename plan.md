@@ -2,11 +2,11 @@
 
 ## 1. Architectural Overview
 *   **Backend**: Node.js with Express.js.
-*   **Database**: SQLite (via `better-sqlite3` or `Sequelize` ORM).
+*   **Database**: Postgres (via `pg` / Neon serverless). Originally SQLite (`better-sqlite3`), replaced to deploy on Vercel serverless.
 *   **Frontend Showcase**: Server-Side Rendered (EJS/Pug) or decoupled static frontend consuming REST APIs. SSR is recommended for superior out-of-the-box SEO/AEO optimization for B2B product catalogs.
 *   **Admin Panel**: Protected route cluster within Express, utilizing session-based authentication for content management.
 
-## 2. Database Schema (SQLite)
+## 2. Database Schema (Postgres)
 
 ### Table: `users` (Admin access)
 *   `id` (PK, UUID)

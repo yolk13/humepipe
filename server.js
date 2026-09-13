@@ -11,9 +11,9 @@ const { z } = require('zod');
 const { v4: uuidv4 } = require('uuid');
 const db = require('./db/database');
 const seed = require('./db/seed');
-const SqliteSessionStore = require('./db/session-store');
+const SessionStore = require('./db/session-store');
 const site = require('./config/site');
-const { upload, removeUpload, uploadErrorHandler } = require('./lib/upload');
+const { upload, storeUpload, removeUpload, uploadErrorHandler } = require('./lib/upload');
 const { sendMail } = require('./lib/mailer');
 const { clientConfirmation, adminAlert, contactedFollowUp } = require('./lib/email-templates');
 
@@ -26,8 +26,9 @@ if (!process.env.SESSION_SECRET) {
     console.warn('WARNING: SESSION_SECRET not set. Using insecure default. Set SESSION_SECRET in .env for production.');
 }
 
-seed();
+const seedPromise = seed().catch(err => console.error('[seed]', err.message));
 
+app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -40,7 +41,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com'],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://fonts.googleapis.com'],
-            imgSrc: ["'self'", 'data:', 'blob:'],
+            imgSrc: ["'self'", 'data:', 'blob:', 'https://*.public.blob.vercel-storage.com'],
             connectSrc: ["'self'"],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
             frameAncestors: ["'none'"],
@@ -56,8 +57,15 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 },
-    store: new SqliteSessionStore(db)
+    store: new SessionStore(db)
 }));
+
+async function ensureReady(req, res, next) {
+    try { await seedPromise; } catch (err) { console.error('[seed] failed during request:', err.message); }
+    next();
+}
+
+app.use(ensureReady);
 
 // CSRF protection for admin routes
 function ensureCsrf(req, res, next) {
@@ -117,18 +125,23 @@ function slugify(s) {
 }
 
 function blogCount() {
-    return db.prepare('SELECT COUNT(*) AS c FROM blogs').get().c;
+    return db.get('SELECT COUNT(*) AS c FROM blogs').then(r => Number(r.c));
 }
 
 function enquiryCounts() {
-    return db.prepare(`
+    return db.get(`
         SELECT
             COUNT(*) AS total,
             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
             SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) AS reviewed,
             SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END) AS contacted
         FROM enquiries
-    `).get();
+    `).then(r => ({
+        total: Number(r.total),
+        pending: Number(r.pending),
+        reviewed: Number(r.reviewed),
+        contacted: Number(r.contacted)
+    }));
 }
 
 const adminEmail = () => process.env.ADMIN_EMAIL || site.email;
@@ -181,8 +194,8 @@ app.get('/about', (req, res) => {
     });
 });
 
-app.get('/products', (req, res) => {
-    const products = db.prepare('SELECT * FROM products ORDER BY internal_diameter').all();
+app.get('/products', async (req, res) => {
+    const products = await db.all('SELECT * FROM products ORDER BY internal_diameter');
     res.render('products', {
         products,
         jsonld: {
@@ -233,8 +246,8 @@ app.get('/quality', (req, res) => {
     });
 });
 
-app.get('/blogs', (req, res) => {
-    const blogs = db.prepare('SELECT * FROM blogs ORDER BY published_at DESC').all();
+app.get('/blogs', async (req, res) => {
+    const blogs = await db.all('SELECT * FROM blogs ORDER BY published_at DESC');
     res.render('blogs', {
         blogs,
         meta: {
@@ -244,8 +257,8 @@ app.get('/blogs', (req, res) => {
     });
 });
 
-app.get('/blogs/:slug', (req, res) => {
-    const blog = db.prepare('SELECT * FROM blogs WHERE slug = ?').get(req.params.slug);
+app.get('/blogs/:slug', async (req, res) => {
+    const blog = await db.get('SELECT * FROM blogs WHERE slug = ?', req.params.slug);
     if (!blog) return res.status(404).render('404', {
         meta: { title: 'Not Found - Contech Concrete', description: 'Page not found.' }
     });
@@ -289,10 +302,11 @@ const enquireLimiter = process.env.NODE_ENV === 'test'
         max: 10,
         message: { error: 'Too many requests. Please try again later.' },
         standardHeaders: true,
-        legacyHeaders: false
+        legacyHeaders: false,
+        validate: { trustProxy: false }
     });
 
-app.post('/api/enquire', enquireLimiter, (req, res) => {
+app.post('/api/enquire', enquireLimiter, async (req, res) => {
     const parsed = enquirySchema.safeParse(req.body);
     if (!parsed.success) {
         const issues = {};
@@ -303,10 +317,11 @@ app.post('/api/enquire', enquireLimiter, (req, res) => {
     const { client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity, delivery_site, message } = parsed.data;
     const id = uuidv4();
     try {
-        db.prepare(`
-            INSERT INTO enquiries (id, client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity, delivery_site, message, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-        `).run(id, client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity || null, delivery_site, message);
+        await db.run(
+            `INSERT INTO enquiries (id, client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity, delivery_site, message, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+            id, client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity || null, delivery_site, message
+        );
         res.status(200).json({ success: true, message: 'Enquiry submitted successfully' });
         const enquiry = { id, client_name, company_name, email, phone, pipe_type, pipe_diameter, quantity, delivery_site, message };
         sendEnquiryEmails(enquiry).catch(err => console.error('[mail] enquiry emails failed:', err.message));
@@ -325,13 +340,13 @@ app.get('/admin/login', (req, res) => {
     });
 });
 
-app.post('/admin/login', verifyCsrf, (req, res) => {
+app.post('/admin/login', verifyCsrf, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
         req.session.flash = { type: 'error', text: 'Email and password are required.' };
         return res.redirect('/admin/login');
     }
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(String(email).toLowerCase());
+    const user = await db.get('SELECT * FROM users WHERE email = ?', String(email).toLowerCase());
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
         req.session.flash = { type: 'error', text: 'Invalid credentials.' };
         return res.redirect('/admin/login');
@@ -346,21 +361,24 @@ app.post('/admin/logout', verifyCsrf, (req, res) => {
 
 app.get('/admin', requireAuth, (req, res) => res.redirect('/admin/dashboard'));
 
-app.get('/admin/dashboard', requireAuth, (req, res) => {
-    const counts = enquiryCounts();
-    const recent = db.prepare('SELECT * FROM enquiries ORDER BY created_at DESC LIMIT 8').all();
+app.get('/admin/dashboard', requireAuth, async (req, res) => {
+    const [counts, recent, blogsCount] = await Promise.all([
+        enquiryCounts(),
+        db.all('SELECT * FROM enquiries ORDER BY created_at DESC LIMIT 8'),
+        blogCount()
+    ]);
     res.render('admin/dashboard', {
         counts,
         recent,
-        blogsCount: blogCount(),
+        blogsCount,
         meta: { title: 'Dashboard - Contech Admin', description: 'Admin dashboard.' }
     });
 });
 
 // ===== Admin: Blogs CRUD =====
 
-app.get('/admin/blogs', requireAuth, (req, res) => {
-    const blogs = db.prepare('SELECT id, title, slug, published_at FROM blogs ORDER BY published_at DESC').all();
+app.get('/admin/blogs', requireAuth, async (req, res) => {
+    const blogs = await db.all('SELECT id, title, slug, published_at FROM blogs ORDER BY published_at DESC');
     res.render('admin/blogs', {
         blogs,
         meta: { title: 'Blogs - Contech Admin', description: 'Manage blogs.' }
@@ -374,29 +392,32 @@ app.get('/admin/blogs/new', requireAuth, (req, res) => {
     });
 });
 
-app.post('/admin/blogs/new', requireAuth, upload.single('featured_image_file'), verifyCsrf, (req, res) => {
+app.post('/admin/blogs/new', requireAuth, upload.single('featured_image_file'), verifyCsrf, async (req, res) => {
     const { title, slug, content, meta_title, meta_description } = req.body;
     if (!title) {
         req.session.flash = { type: 'error', text: 'Title is required.' };
         return res.redirect('/admin/blogs/new');
     }
     const finalSlug = slug || slugify(title);
-    const existing = db.prepare('SELECT id FROM blogs WHERE slug = ?').get(finalSlug);
+    const existing = await db.get('SELECT id FROM blogs WHERE slug = ?', finalSlug);
     if (existing) {
         req.session.flash = { type: 'error', text: 'A blog with this slug already exists.' };
         return res.redirect('/admin/blogs/new');
     }
-    const featured_image = req.file ? `/uploads/${req.file.filename}` : (req.body.featured_image || '');
-    db.prepare(`
-        INSERT INTO blogs (id, title, slug, content, meta_title, meta_description, featured_image, published_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(uuidv4(), title, finalSlug, content || '', meta_title || '', meta_description || '', featured_image, new Date().toISOString());
+    const featured_image = req.file
+        ? await storeUpload(req.file.buffer, req.file.mimetype)
+        : (req.body.featured_image || '');
+    await db.run(
+        `INSERT INTO blogs (id, title, slug, content, meta_title, meta_description, featured_image, published_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        uuidv4(), title, finalSlug, content || '', meta_title || '', meta_description || '', featured_image, new Date().toISOString()
+    );
     req.session.flash = { type: 'success', text: 'Blog created.' };
     res.redirect('/admin/blogs');
 });
 
-app.get('/admin/blogs/:id/edit', requireAuth, (req, res) => {
-    const blog = db.prepare('SELECT * FROM blogs WHERE id = ?').get(req.params.id);
+app.get('/admin/blogs/:id/edit', requireAuth, async (req, res) => {
+    const blog = await db.get('SELECT * FROM blogs WHERE id = ?', req.params.id);
     if (!blog) {
         req.session.flash = { type: 'error', text: 'Blog not found.' };
         return res.redirect('/admin/blogs');
@@ -407,34 +428,35 @@ app.get('/admin/blogs/:id/edit', requireAuth, (req, res) => {
     });
 });
 
-app.post('/admin/blogs/:id/edit', requireAuth, upload.single('featured_image_file'), verifyCsrf, (req, res) => {
+app.post('/admin/blogs/:id/edit', requireAuth, upload.single('featured_image_file'), verifyCsrf, async (req, res) => {
     const { title, slug, content, meta_title, meta_description } = req.body;
     if (!title) {
         req.session.flash = { type: 'error', text: 'Title is required.' };
         return res.redirect(`/admin/blogs/${req.params.id}/edit`);
     }
     const finalSlug = slug || slugify(title);
-    const clash = db.prepare('SELECT id FROM blogs WHERE slug = ? AND id != ?').get(finalSlug, req.params.id);
+    const clash = await db.get('SELECT id FROM blogs WHERE slug = ? AND id != ?', finalSlug, req.params.id);
     if (clash) {
         req.session.flash = { type: 'error', text: 'A blog with this slug already exists.' };
         return res.redirect(`/admin/blogs/${req.params.id}/edit`);
     }
-    const current = db.prepare('SELECT featured_image FROM blogs WHERE id = ?').get(req.params.id);
+    const current = await db.get('SELECT featured_image FROM blogs WHERE id = ?', req.params.id);
     const featured_image = req.file
-        ? `/uploads/${req.file.filename}`
+        ? await storeUpload(req.file.buffer, req.file.mimetype)
         : (req.body.featured_image || (current && current.featured_image) || '');
-    db.prepare(`
-        UPDATE blogs SET title = ?, slug = ?, content = ?, meta_title = ?, meta_description = ?, featured_image = ?
-        WHERE id = ?
-    `).run(title, finalSlug, content || '', meta_title || '', meta_description || '', featured_image, req.params.id);
+    await db.run(
+        `UPDATE blogs SET title = ?, slug = ?, content = ?, meta_title = ?, meta_description = ?, featured_image = ?
+        WHERE id = ?`,
+        title, finalSlug, content || '', meta_title || '', meta_description || '', featured_image, req.params.id
+    );
     if (req.file) removeUpload(current && current.featured_image);
     req.session.flash = { type: 'success', text: 'Blog updated.' };
     res.redirect('/admin/blogs');
 });
 
-app.post('/admin/blogs/:id/delete', requireAuth, verifyCsrf, (req, res) => {
-    const blog = db.prepare('SELECT featured_image FROM blogs WHERE id = ?').get(req.params.id);
-    db.prepare('DELETE FROM blogs WHERE id = ?').run(req.params.id);
+app.post('/admin/blogs/:id/delete', requireAuth, verifyCsrf, async (req, res) => {
+    const blog = await db.get('SELECT featured_image FROM blogs WHERE id = ?', req.params.id);
+    await db.run('DELETE FROM blogs WHERE id = ?', req.params.id);
     removeUpload(blog && blog.featured_image);
     req.session.flash = { type: 'success', text: 'Blog deleted.' };
     res.redirect('/admin/blogs');
@@ -442,49 +464,51 @@ app.post('/admin/blogs/:id/delete', requireAuth, verifyCsrf, (req, res) => {
 
 // ===== Admin: Products CRUD =====
 
-app.get('/admin/products', requireAuth, (req, res) => {
-    const products = db.prepare('SELECT * FROM products ORDER BY internal_diameter').all();
+app.get('/admin/products', requireAuth, async (req, res) => {
+    const products = await db.all('SELECT * FROM products ORDER BY internal_diameter');
     res.render('admin/products', {
         products,
         meta: { title: 'Products - Contech Admin', description: 'Manage products.' }
     });
 });
 
-app.post('/admin/products', requireAuth, upload.single('image'), verifyCsrf, (req, res) => {
+app.post('/admin/products', requireAuth, upload.single('image'), verifyCsrf, async (req, res) => {
     const { internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type } = req.body;
     if (!internal_diameter || !min_thickness || !effective_length || !load_crack || !ultimate_load) {
         req.session.flash = { type: 'error', text: 'All specification fields are required.' };
         return res.redirect('/admin/products');
     }
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
-    db.prepare(`
-        INSERT INTO products (id, internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(uuidv4(), Number(internal_diameter), Number(min_thickness), Number(effective_length), Number(load_crack), Number(ultimate_load), type || 'NP3/NP4', image);
+    const image = req.file ? await storeUpload(req.file.buffer, req.file.mimetype) : '';
+    await db.run(
+        `INSERT INTO products (id, internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type, image)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        uuidv4(), Number(internal_diameter), Number(min_thickness), Number(effective_length), Number(load_crack), Number(ultimate_load), type || 'NP3/NP4', image
+    );
     req.session.flash = { type: 'success', text: 'Product added.' };
     res.redirect('/admin/products');
 });
 
-app.post('/admin/products/:id/edit', requireAuth, upload.single('image'), verifyCsrf, (req, res) => {
+app.post('/admin/products/:id/edit', requireAuth, upload.single('image'), verifyCsrf, async (req, res) => {
     const { internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type } = req.body;
     if (!internal_diameter || !min_thickness || !effective_length || !load_crack || !ultimate_load) {
         req.session.flash = { type: 'error', text: 'All specification fields are required.' };
         return res.redirect('/admin/products');
     }
-    const current = db.prepare('SELECT image FROM products WHERE id = ?').get(req.params.id);
-    const image = req.file ? `/uploads/${req.file.filename}` : (req.body.image || current && current.image || '');
-    db.prepare(`
-        UPDATE products SET internal_diameter = ?, min_thickness = ?, effective_length = ?, load_crack = ?, ultimate_load = ?, type = ?, image = ?
-        WHERE id = ?
-    `).run(Number(internal_diameter), Number(min_thickness), Number(effective_length), Number(load_crack), Number(ultimate_load), type || 'NP3/NP4', image, req.params.id);
+    const current = await db.get('SELECT image FROM products WHERE id = ?', req.params.id);
+    const image = req.file ? await storeUpload(req.file.buffer, req.file.mimetype) : (req.body.image || current && current.image || '');
+    await db.run(
+        `UPDATE products SET internal_diameter = ?, min_thickness = ?, effective_length = ?, load_crack = ?, ultimate_load = ?, type = ?, image = ?
+        WHERE id = ?`,
+        Number(internal_diameter), Number(min_thickness), Number(effective_length), Number(load_crack), Number(ultimate_load), type || 'NP3/NP4', image, req.params.id
+    );
     if (req.file) removeUpload(current && current.image);
     req.session.flash = { type: 'success', text: 'Product updated.' };
     res.redirect('/admin/products');
 });
 
-app.post('/admin/products/:id/delete', requireAuth, verifyCsrf, (req, res) => {
-    const product = db.prepare('SELECT image FROM products WHERE id = ?').get(req.params.id);
-    db.prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
+app.post('/admin/products/:id/delete', requireAuth, verifyCsrf, async (req, res) => {
+    const product = await db.get('SELECT image FROM products WHERE id = ?', req.params.id);
+    await db.run('DELETE FROM products WHERE id = ?', req.params.id);
     removeUpload(product && product.image);
     req.session.flash = { type: 'success', text: 'Product deleted.' };
     res.redirect('/admin/products');
@@ -509,20 +533,21 @@ function enquiriesQuery({ status, q }) {
     return { where: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '', params };
 }
 
-app.get('/admin/enquiries', requireAuth, (req, res) => {
+app.get('/admin/enquiries', requireAuth, async (req, res) => {
     const status = ['pending', 'reviewed', 'contacted'].includes(req.query.status) ? req.query.status : 'all';
     const q = (req.query.q || '').trim();
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const { where, params } = enquiriesQuery({ status, q });
 
-    const total = db.prepare(`SELECT COUNT(*) AS c FROM enquiries ${where}`).get(...params).c;
+    const total = Number((await db.get(`SELECT COUNT(*) AS c FROM enquiries ${where}`, ...params)).c);
     const totalPages = Math.max(1, Math.ceil(total / ENQUIRIES_PER_PAGE));
     const current = Math.min(page, totalPages);
     const offset = (current - 1) * ENQUIRIES_PER_PAGE;
 
-    const enquiries = db.prepare(`
-        SELECT * FROM enquiries ${where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?
-    `).all(...params, ENQUIRIES_PER_PAGE, offset);
+    const enquiries = await db.all(
+        `SELECT * FROM enquiries ${where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
+        ...params, ENQUIRIES_PER_PAGE, offset
+    );
 
     res.render('admin/enquiries', {
         enquiries,
@@ -545,8 +570,8 @@ function listQueryString({ status, q, page }) {
     return p.toString();
 }
 
-app.get('/admin/enquiries/:id', requireAuth, (req, res) => {
-    const enquiry = db.prepare('SELECT * FROM enquiries WHERE id = ?').get(req.params.id);
+app.get('/admin/enquiries/:id', requireAuth, async (req, res) => {
+    const enquiry = await db.get('SELECT * FROM enquiries WHERE id = ?', req.params.id);
     if (!enquiry) {
         req.session.flash = { type: 'error', text: 'Enquiry not found.' };
         return res.redirect('/admin/enquiries');
@@ -558,15 +583,15 @@ app.get('/admin/enquiries/:id', requireAuth, (req, res) => {
     });
 });
 
-app.post('/admin/enquiries/:id/status', requireAuth, verifyCsrf, (req, res) => {
+app.post('/admin/enquiries/:id/status', requireAuth, verifyCsrf, async (req, res) => {
     const { status } = req.body;
     if (!['pending', 'reviewed', 'contacted'].includes(status)) {
         req.session.flash = { type: 'error', text: 'Invalid status.' };
         return res.redirect('/admin/enquiries');
     }
-    db.prepare('UPDATE enquiries SET status = ? WHERE id = ?').run(status, req.params.id);
+    await db.run('UPDATE enquiries SET status = ? WHERE id = ?', status, req.params.id);
     if (status === 'contacted') {
-        const enquiry = db.prepare('SELECT * FROM enquiries WHERE id = ?').get(req.params.id);
+        const enquiry = await db.get('SELECT * FROM enquiries WHERE id = ?', req.params.id);
         if (enquiry) {
             sendContactedEmail(enquiry).catch(err => console.error('[mail] contacted email failed:', err.message));
         }

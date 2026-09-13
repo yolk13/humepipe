@@ -1,5 +1,3 @@
 node_modules/
-db/contech.db
-db/contech.db-*
 public/uploads/
 .env

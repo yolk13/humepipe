@@ -1,77 +1,102 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'contech.db');
-const db = new Database(dbPath);
+const connStr = process.env.DATABASE_URL || '';
 
-db.pragma('journal_mode = WAL');
-
-// Initialize schema
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'admin'
-  );
-
-  CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
-    internal_diameter INTEGER,
-    min_thickness INTEGER,
-    effective_length REAL,
-    load_crack REAL,
-    ultimate_load REAL,
-    type TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS blogs (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    slug TEXT UNIQUE NOT NULL,
-    content TEXT,
-    meta_title TEXT,
-    meta_description TEXT,
-    featured_image TEXT,
-    published_at DATETIME
-  );
-
-  CREATE TABLE IF NOT EXISTS enquiries (
-    id TEXT PRIMARY KEY,
-    client_name TEXT,
-    company_name TEXT,
-    email TEXT,
-    phone TEXT,
-    pipe_type TEXT,
-    pipe_diameter TEXT,
-    quantity INTEGER,
-    delivery_site TEXT,
-    message TEXT,
-    status TEXT DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
-// Idempotent migrations for existing databases
-function hasColumn(table, column) {
-    return db.prepare(`PRAGMA table_info(${table})`)
-        .all()
-        .some(col => col.name === column);
+let pool;
+if (!connStr && process.env.NODE_ENV === 'test') {
+    const { newDb } = require('pg-mem');
+    const mem = newDb({ noAstCoverageCheck: true });
+    const MemPool = mem.adapters.createPg().Pool;
+    pool = new MemPool();
+} else {
+    const useSsl = /(^|[?&])sslmode=require($|&)/i.test(connStr)
+        || process.env.DB_SSL === 'true'
+        || process.env.NODE_ENV === 'production';
+    pool = new Pool({
+        connectionString: connStr,
+        ssl: useSsl ? { rejectUnauthorized: false } : undefined
+    });
+    if (!connStr) {
+        console.warn('WARNING: DATABASE_URL not set. Queries will fail until it is configured.');
+    }
 }
 
-if (!hasColumn('products', 'image')) {
-    db.exec('ALTER TABLE products ADD COLUMN image TEXT');
-    console.log('Migrated: products.image column added');
+function translate(sql) {
+    let n = 0;
+    return sql.replace(/\?/g, () => `$${++n}`);
 }
 
-if (!hasColumn('enquiries', 'pipe_diameter')) {
-    db.exec('ALTER TABLE enquiries ADD COLUMN pipe_diameter TEXT');
-    console.log('Migrated: enquiries.pipe_diameter column added');
+async function get(sql, ...params) {
+    const result = await pool.query(translate(sql), params);
+    return result.rows[0] || null;
 }
 
-if (!hasColumn('enquiries', 'delivery_site')) {
-    db.exec('ALTER TABLE enquiries ADD COLUMN delivery_site TEXT');
-    console.log('Migrated: enquiries.delivery_site column added');
+async function all(sql, ...params) {
+    const result = await pool.query(translate(sql), params);
+    return result.rows;
 }
 
-module.exports = db;
+async function run(sql, ...params) {
+    const result = await pool.query(translate(sql), params);
+    return { changes: result.rowCount, lastInsertRowid: null };
+}
+
+async function init() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'admin'
+        );
+
+        CREATE TABLE IF NOT EXISTS products (
+            id TEXT PRIMARY KEY,
+            internal_diameter INTEGER,
+            min_thickness INTEGER,
+            effective_length DOUBLE PRECISION,
+            load_crack DOUBLE PRECISION,
+            ultimate_load DOUBLE PRECISION,
+            type TEXT,
+            image TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS blogs (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL,
+            content TEXT,
+            meta_title TEXT,
+            meta_description TEXT,
+            featured_image TEXT,
+            published_at TIMESTAMPTZ
+        );
+
+        CREATE TABLE IF NOT EXISTS enquiries (
+            id TEXT PRIMARY KEY,
+            client_name TEXT,
+            company_name TEXT,
+            email TEXT,
+            phone TEXT,
+            pipe_type TEXT,
+            pipe_diameter TEXT,
+            quantity INTEGER,
+            delivery_site TEXT,
+            message TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMPTZ DEFAULT now()
+        );
+    `);
+}
+
+const initPromise = init().catch(err => {
+    console.error('[db] schema init failed:', err.message);
+});
+
+async function close() {
+    try {
+        await pool.end();
+    } catch {}
+}
+
+module.exports = { pool, get, all, run, init, initPromise, close };

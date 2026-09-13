@@ -1,24 +1,28 @@
-# Contech Concrete — Marketing Site + Admin (Express draft)
+# Contech Concrete — Marketing Site + Admin (Express)
 
 Standalone Express + EJS implementation of the Contech Concrete B2B site: product spec tables,
-blog, RFQ enquiry pipeline, and a full admin panel. SQLite-backed, no build step.
-
-> This folder (`new plan/`) is an earlier Express-era draft. The committed architecture is the
-> Payload CMS + Next.js workspaces at the repo root (`web/` + `cms/`). This draft is kept runnable
-> for reference — see the root `AGENTS.md`.
+blog, RFQ enquiry pipeline, and a full admin panel. Postgres-backed, no build step.
 
 ## Requirements
 
-- Node.js 20+ (tested on 22/25)
-- `npm` (a single `npm install` here — this folder has its own `package-lock.json`)
+- Node.js 20+
+- Postgres — a Postgres instance is required (Neon free tier for Vercel, or the bundled
+  `docker compose` Postgres service for local dev)
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env   # then set SESSION_SECRET at minimum
-npm run seed           # creates db/contech.db + admin user + 11 products + 2 blogs
+cp .env.example .env   # set DATABASE_URL (and SESSION_SECRET at minimum)
+npm run seed           # creates tables + admin user + 11 products + 2 blogs
 npm run dev            # http://localhost:3000 (use PORT=3100 if 3000 is taken)
+```
+
+No local Postgres handy? Run one via Docker:
+
+```bash
+docker compose up -d db
+# then set DATABASE_URL=postgres://contech:contech@localhost:5432/contech
 ```
 
 Seeded admin login (printed once at seed):
@@ -37,7 +41,7 @@ Password: Contech#2026
 | `npm run dev`      | Run with file-watch reload (`node --watch`)         |
 | `npm start`        | Run in production mode                              |
 | `npm run seed`     | Idempotently seed products, blogs, admin user       |
-| `npm test`         | Run the `node:test` + supertest suite (isolated temp DB) |
+| `npm test`         | Run the `node:test` + supertest suite (in-memory Postgres via pg-mem) |
 
 The server honors the `PORT` env var (3000 is environment-owned on dev machines — use 3001+).
 
@@ -45,16 +49,17 @@ The server honors the `PORT` env var (3000 is environment-owned on dev machines 
 
 See `.env.example` for the full list. Key ones:
 
-| Variable         | Purpose                                                              |
-| ---------------- | -------------------------------------------------------------------- |
-| `PORT`           | HTTP port (default 3000)                                             |
-| `SESSION_SECRET` | **Required in production.** Session signing secret                   |
-| `SMTP_HOST`      | SMTP server. If unset, emails are logged to console only            |
-| `SMTP_USER/PASS` | SMTP credentials                                                     |
-| `SMTP_FROM`      | Sender address (`Contech Concrete <info@contech.com.np>` by default) |
-| `ADMIN_EMAIL`    | Receives new-enquiry admin alerts                                    |
-| `SITE_URL`       | Public site URL (used in admin alert email links)                    |
-| `DB_PATH`        | SQLite file override (used by tests)                                 |
+| Variable              | Purpose                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| `PORT`                | HTTP port (default 3000)                                             |
+| `DATABASE_URL`        | **Required.** Postgres connection string (`sslmode=require` on Neon) |
+| `SESSION_SECRET`      | **Required in production.** Session signing secret                   |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token. When unset, uploads fall back to `public/uploads` |
+| `SMTP_HOST`           | SMTP server. If unset, emails are logged to console only            |
+| `SMTP_USER/PASS`      | SMTP credentials                                                     |
+| `SMTP_FROM`           | Sender address (`Contech Concrete <info@contech.com.np>` by default) |
+| `ADMIN_EMAIL`         | Receives new-enquiry admin alerts                                    |
+| `SITE_URL`            | Public site URL (used in admin alert email links)                    |
 
 ## Email notifications
 
@@ -75,16 +80,38 @@ logged to the console in a readable format — useful for local development and 
 Security: session auth (bcrypt), CSRF tokens on all admin POSTs, Helmet CSP, `sanitize-html` on
 blog render, uploads restricted to image MIME types (5 MB), rate-limited enquiry API.
 
+## Deploying to Vercel
+
+The app runs as a single serverless function (`api/index.js`), routed via `vercel.json`. Express
+serves `public/` statically inside the function.
+
+1. Create a Neon (or any Postgres) database and copy the pooled connection URL.
+2. Create a Vercel Blob store and copy its `BLOB_READ_WRITE_TOKEN`.
+3. Connect the repo to a Vercel project and set env vars:
+   `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `SESSION_SECRET`, `ADMIN_EMAIL`, `SMTP_*`, `SITE_URL`.
+4. `vercel --prod` (or push to the connected git branch).
+
+Seeding runs automatically on cold start (idempotent — skips rows that already exist). You can
+also run it manually against the production DB with `npm run seed`.
+
+Notes:
+
+- Uptimes/Filesystem on Vercel functions are ephemeral — all persistent state (enquiries,
+  admin content, sessions) lives in Postgres; uploaded images live in Vercel Blob. None of it is
+  written to the function's filesystem.
+- `better-sqlite3` was replaced with `pg` precisely because the native module failed to compile
+  in Vercel's build image.
+
 ## Tests
 
 ```bash
 npm test
 ```
 
-The suite (`test/app.test.js`) boots the app against a throwaway SQLite DB in the OS temp dir
-and covers: public routes, blog rendering + sanitization, enquiry API validation, auth + CSRF,
-enquiry list pagination/search/detail, status updates, blog/product CRUD round trips, upload
-rejection, and robots.txt AI-crawler allowances.
+The suite (`test/app.test.js`) boots the app against pg-mem, an in-memory Postgres emulator, so
+no external database is needed. It covers: public routes, blog rendering + sanitization, enquiry
+API validation, auth + CSRF, enquiry list pagination/search/detail, status updates, blog/product
+CRUD round trips, upload rejection, and robots.txt AI-crawler allowances.
 
 ## Docker
 
@@ -92,22 +119,25 @@ rejection, and robots.txt AI-crawler allowances.
 docker compose up --build
 ```
 
-Volumes persist `public/uploads` (product/blog images) and `db/contech.db`. Set secrets via a
+Starts Postgres (`db` service) and the app, with healthcheck-gated startup. Volumes persist
+`public/uploads` (local image fallback) and the Postgres data directory. Set secrets via a
 `.env` file (docker compose reads it automatically) or the `environment` block.
 
 ## Project layout
 
 ```
-server.js            Express app (routes, auth, CSRF, CSP, emails) — exports the app for tests
-db/database.js       SQLite schema + idempotent migrations (DB_PATH override)
-db/seed.js           Idempotent seed (products, blogs, admin user)
-db/session-store.js  SQLite-backed express-session store
-lib/upload.js        Multer config + upload cleanup
-lib/mailer.js        SMTP transport + console fallback
-config/site.js       Company/contact details
-views/               Public + admin EJS views
-public/              Tailwind (CDN), robots.txt, uploads/
-test/app.test.js     node:test + supertest suite
+server.js              Express app (routes, auth, CSRF, CSP, emails) — exports the app for tests
+api/index.js           Vercel serverless entry — exports the Express app
+vercel.json            Vercel function config + catch-all route to api/index.js
+db/database.js         Postgres pool + get/all/run helpers (? -> $n param translation)
+db/seed.js             Idempotent seed (products, blogs, admin user)
+db/session-store.js    Postgres-backed express-session store
+lib/upload.js          Multer (memory) -> Vercel Blob, disk fallback for local dev
+lib/mailer.js          SMTP transport + console fallback
+config/site.js         Company/contact details
+views/                 Public + admin EJS views
+public/                Tailwind (CDN), robots.txt, uploads/ (local fallback only)
+test/app.test.js       node:test + supertest suite
 ```
 
 ## Notes / conventions
