@@ -6,7 +6,16 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const sanitizeHtmlLib = require('sanitize-html');
+let sanitizeHtmlLib;
+try {
+    sanitizeHtmlLib = require('sanitize-html');
+} catch (e) {
+    console.warn('[sanitize-html] require failed, using fallback sanitizer:', e.message);
+    sanitizeHtmlLib = (html) => String(html || '')
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/on\w+="[^"]*"/gi, '')
+        .replace(/on\w+='[^']*'/gi, '');
+}
 const { z } = require('zod');
 const { v4: uuidv4 } = require('uuid');
 const db = require('./db/database');
