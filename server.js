@@ -17,7 +17,7 @@ try {
         .replace(/on\w+='[^']*'/gi, '');
 }
 const { z } = require('zod');
-const { v4: uuidv4 } = require('uuid');
+const uuidv4 = () => crypto.randomUUID();
 const db = require('./db/database');
 const seed = require('./db/seed');
 const SessionStore = require('./db/session-store');
