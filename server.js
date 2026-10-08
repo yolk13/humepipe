@@ -30,7 +30,10 @@ const seedPromise = seed().catch(err => console.error('[seed]', err.message));
 
 app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', [
+    path.join(__dirname, 'views'),
+    path.join(process.cwd(), 'views')
+]);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true, limit: '200kb' }));
 app.use(bodyParser.json({ limit: '200kb' }));
@@ -611,6 +614,38 @@ app.use((req, res) => {
     res.status(404).render('404', {
         meta: { title: 'Not Found - Contech Concrete', description: 'Page not found.' }
     });
+});
+
+// ===== Global Error Handler =====
+
+app.use((err, req, res, next) => {
+    console.error('[Unhandled Server Error]', err);
+    res.status(500).type('text/html').send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Server Error - Contech Concrete</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; margin: 0; }
+                .box { max-width: 700px; margin: 2rem auto; background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
+                h1 { color: #f43f5e; margin-top: 0; }
+                code { background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 4px; color: #38bdf8; }
+                pre { background: #0f172a; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #cbd5e1; font-size: 0.85rem; }
+            </style>
+        </head>
+        <body>
+            <div class="box">
+                <h1>500 - Server Configuration Error</h1>
+                <p><strong>Error details:</strong></p>
+                <p>${err.message || 'An unexpected internal error occurred.'}</p>
+                ${!process.env.DATABASE_URL && !process.env.POSTGRES_URL ? '<p style="color:#fbbf24;"><strong>Hint:</strong> Make sure you have added <code>POSTGRES_URL</code> or <code>DATABASE_URL</code> to your Vercel Project Settings &rarr; Environment Variables.</p>' : ''}
+                <p style="color:#94a3b8; font-size: 0.85rem;">Check your Vercel Dashboard Function Runtime Logs for full stack traces.</p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 if (require.main === module) {

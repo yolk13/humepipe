@@ -1,6 +1,10 @@
 const { Pool } = require('pg');
 
-const connStr = process.env.DATABASE_URL || '';
+const connStr = process.env.DATABASE_URL
+    || process.env.POSTGRES_URL
+    || process.env.POSTGRES_PRISMA_URL
+    || process.env.POSTGRES_URL_NON_POOLING
+    || '';
 
 let pool;
 if (!connStr && process.env.NODE_ENV === 'test') {
@@ -8,17 +12,25 @@ if (!connStr && process.env.NODE_ENV === 'test') {
     const mem = newDb({ noAstCoverageCheck: true });
     const MemPool = mem.adapters.createPg().Pool;
     pool = new MemPool();
+} else if (!connStr) {
+    console.warn('WARNING: Neither DATABASE_URL nor POSTGRES_URL is configured. Database features are disabled.');
+    pool = {
+        query: async () => {
+            throw new Error('Database connection string is missing. Please configure DATABASE_URL or POSTGRES_URL in Vercel Project Settings > Environment Variables.');
+        },
+        end: async () => {}
+    };
 } else {
     const useSsl = /(^|[?&])sslmode=require($|&)/i.test(connStr)
         || process.env.DB_SSL === 'true'
-        || process.env.NODE_ENV === 'production';
+        || process.env.NODE_ENV === 'production'
+        || connStr.includes('neon.tech')
+        || connStr.includes('vercel-storage.com')
+        || connStr.includes('supabase.co');
     pool = new Pool({
         connectionString: connStr,
         ssl: useSsl ? { rejectUnauthorized: false } : undefined
     });
-    if (!connStr) {
-        console.warn('WARNING: DATABASE_URL not set. Queries will fail until it is configured.');
-    }
 }
 
 function translate(sql) {
@@ -42,6 +54,9 @@ async function run(sql, ...params) {
 }
 
 async function init() {
+    if (!connStr && process.env.NODE_ENV !== 'test') {
+        return;
+    }
     await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,

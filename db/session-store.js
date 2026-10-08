@@ -21,9 +21,13 @@ class SessionStore extends Store {
                 const row = await this.db.get('SELECT sess FROM sessions WHERE sid = ? AND expire > ?', sid, Date.now());
                 cb(null, row ? JSON.parse(row.sess) : null);
             } catch (err) {
-                cb(err);
+                console.error('[sessions] get failed:', err.message);
+                cb(null, null);
             }
-        }).catch((err) => cb(err));
+        }).catch((err) => {
+            console.error('[sessions] ready failed:', err.message);
+            cb(null, null);
+        });
     }
 
     set(sid, session, cb) {
@@ -40,9 +44,13 @@ class SessionStore extends Store {
                 );
                 if (cb) cb();
             } catch (err) {
-                if (cb) cb(err);
+                console.error('[sessions] set failed:', err.message);
+                if (cb) cb();
             }
-        }).catch((err) => cb && cb(err));
+        }).catch((err) => {
+            console.error('[sessions] set ready failed:', err.message);
+            if (cb) cb();
+        });
     }
 
     destroy(sid, cb) {
@@ -51,9 +59,13 @@ class SessionStore extends Store {
                 await this.db.run('DELETE FROM sessions WHERE sid = ?', sid);
                 if (cb) cb();
             } catch (err) {
-                if (cb) cb(err);
+                console.error('[sessions] destroy failed:', err.message);
+                if (cb) cb();
             }
-        }).catch((err) => cb && cb(err));
+        }).catch((err) => {
+            console.error('[sessions] destroy ready failed:', err.message);
+            if (cb) cb();
+        });
     }
 }
 

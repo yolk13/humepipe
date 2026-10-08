@@ -36,43 +36,50 @@ const blogs = [
 ];
 
 async function seed() {
-    await db.initPromise;
+    try {
+        await db.initPromise;
 
-    const productCount = Number((await db.get('SELECT COUNT(*) AS c FROM products')).c);
-    if (productCount === 0) {
-        for (const [dia, thick, len, crack, ultimate] of products) {
-            await db.run(
-                'INSERT INTO products (id, internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                uuidv4(), dia, thick, len, crack, ultimate, 'NP3/NP4'
-            );
+        const prodRow = await db.get('SELECT COUNT(*) AS c FROM products');
+        const productCount = prodRow ? Number(prodRow.c) : 0;
+        if (productCount === 0) {
+            for (const [dia, thick, len, crack, ultimate] of products) {
+                await db.run(
+                    'INSERT INTO products (id, internal_diameter, min_thickness, effective_length, load_crack, ultimate_load, type) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    uuidv4(), dia, thick, len, crack, ultimate, 'NP3/NP4'
+                );
+            }
+            console.log(`Seeded ${products.length} product rows`);
         }
-        console.log(`Seeded ${products.length} product rows`);
-    }
 
-    const userCount = Number((await db.get('SELECT COUNT(*) AS c FROM users')).c);
-    if (userCount === 0) {
-        const email = 'admin@contech.com.np';
-        const password = 'Contech#2026';
-        const hash = bcrypt.hashSync(password, 10);
-        await db.run(
-            'INSERT INTO users (id, email, password_hash, role) VALUES (?, ?, ?, ?)',
-            uuidv4(), email, hash, 'admin'
-        );
-        console.log('Seeded admin user:');
-        console.log(`  Email:    ${email}`);
-        console.log(`  Password: ${password}`);
-        console.log('  (Change this after first login.)');
-    }
-
-    const blogCount = Number((await db.get('SELECT COUNT(*) AS c FROM blogs')).c);
-    if (blogCount === 0) {
-        for (const b of blogs) {
+        const uRow = await db.get('SELECT COUNT(*) AS c FROM users');
+        const userCount = uRow ? Number(uRow.c) : 0;
+        if (userCount === 0) {
+            const email = 'admin@contech.com.np';
+            const password = 'Contech#2026';
+            const hash = bcrypt.hashSync(password, 10);
             await db.run(
-                'INSERT INTO blogs (id, title, slug, content, meta_title, meta_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                uuidv4(), b.title, b.slug, b.content, b.meta_title, b.meta_description, b.published_at
+                'INSERT INTO users (id, email, password_hash, role) VALUES (?, ?, ?, ?)',
+                uuidv4(), email, hash, 'admin'
             );
+            console.log('Seeded admin user:');
+            console.log(`  Email:    ${email}`);
+            console.log(`  Password: ${password}`);
+            console.log('  (Change this after first login.)');
         }
-        console.log(`Seeded ${blogs.length} blog posts`);
+
+        const bRow = await db.get('SELECT COUNT(*) AS c FROM blogs');
+        const blogCount = bRow ? Number(bRow.c) : 0;
+        if (blogCount === 0) {
+            for (const b of blogs) {
+                await db.run(
+                    'INSERT INTO blogs (id, title, slug, content, meta_title, meta_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    uuidv4(), b.title, b.slug, b.content, b.meta_title, b.meta_description, b.published_at
+                );
+            }
+            console.log(`Seeded ${blogs.length} blog posts`);
+        }
+    } catch (err) {
+        console.error('[seed] Warning: seed could not complete:', err.message);
     }
 }
 
